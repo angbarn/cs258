@@ -1,10 +1,44 @@
 import java.io.*;
 import java.sql.*;
 
-class Assignment {
+class InvalidMenuSelection extends IllegalStateException {
+    public InvalidMenuSelection() {
+        super();
+    }
 
-    private static String readEntry(String prompt)
-    {
+    public InvalidMenuSelection(String m) {
+        super(m);
+    }
+
+    public InvalidMenuSelection(Exception e) {
+        super(e);
+    }
+
+    public InvalidMenuSelection(String m, Exception e) {
+        super(m, e);
+    }
+}
+
+class InputHandler {
+    public static int menuOption(String prompt) throws InvalidMenuSelection {
+        String rawInput;        /* Raw input, as provided by readEntry method */
+        int processedInput;     /* Raw input converted to an integer */
+
+        rawInput = readEntry(prompt);
+        try {
+            processedInput = Integer.parseInt(rawInput);
+        } catch (NumberFormatException e) {
+            throw new InvalidMenuSelection(rawInput + " is not a valid menu selection.");
+        }
+
+        return (processedInput);
+    }
+
+    public static String getCredential(String prompt) {
+        return (readEntry(prompt));
+    }
+
+    private static String readEntry(String prompt) {
         try
         {
             StringBuffer buffer = new StringBuffer();
@@ -22,6 +56,10 @@ class Assignment {
             return "";
         }
     }
+}
+
+class Assignment {
+
 
     /**
      * @param conn An open database connection
@@ -126,8 +164,8 @@ class Assignment {
             System.out.println ("Driver could not be loaded");
         }
 
-        user = readEntry("Enter database account:");
-        passwrd = readEntry("Enter a password:");
+        user = InputHandler.getCredential("Enter database account:");
+        passwrd = InputHandler.getCredential("Enter a password:");
         try
         {
             conn = DriverManager.getConnection("jdbc:oracle:thin:@daisy.warwick.ac.uk:1521:daisy",user,passwrd);
@@ -140,31 +178,36 @@ class Assignment {
         }
     }
 
+    public static void exit(Connection conn) throws SQLException {
+        conn.close();
+
+        System.out.println("Database system exited.");
+    }
+
     public static void main(String args[]) throws SQLException, IOException
     {
         // You should only need to fetch the connection details once
         Connection conn = getConnection();
         boolean loop = true;
-        int inputCodified;
-        String input;
+        int input;
 
         while (loop) {
-            input = readEntry("Please make a selection >> ");
-            inputCodified = Integer.parseInt(input);
+            try {
+                input = InputHandler.menuOption("Please make a selection >> ");
+            } catch (InvalidMenuSelection e) {
+                System.out.println("Please enter a valid selection.\n\n");
+                input = -1;
+            }
 
-            switch (inputCodified) {
+            switch (input) {
                 case 1:     System.out.println("Option 1");
                             break;
                 case 2:     System.out.println("Option 2");
                             break;
+                case 9:     loop = false;
+                            break;
                 default:    System.out.println("Invalid selection.");
             }
         }
-
-        // Incomplete
-        // Code to present a looping menu, read in input data and call the appropriate option menu goes here
-        // You may use readEntry to retrieve input data
-
-        conn.close();
     }
 }
