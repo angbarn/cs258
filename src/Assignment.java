@@ -1,21 +1,47 @@
+import jdk.nashorn.internal.ir.annotations.Ignore;
+
 import java.io.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 class InvalidMenuSelection extends IllegalStateException {
-    public InvalidMenuSelection() {
-        super();
+    public InvalidMenuSelection()                      { super(    ); }
+    public InvalidMenuSelection(String m)              { super(m   ); }
+    public InvalidMenuSelection(Exception e)           { super(e   ); }
+    public InvalidMenuSelection(String m, Exception e) { super(m, e); }
+}
+
+class InterrogationTypeMismatch extends IllegalArgumentException {
+    public InterrogationTypeMismatch()                      { super(    ); }
+    public InterrogationTypeMismatch(String m)              { super(m   ); }
+    public InterrogationTypeMismatch(Exception e)           { super(e   ); }
+    public InterrogationTypeMismatch(String m, Exception e) { super(m, e); }
+}
+
+class Interrogator<T> {
+    private String interrogation;
+    private T storedValue;
+
+    public Interrogator(String interrogation) {
+        this.interrogation = interrogation;
+        this.storedValue = null;
     }
 
-    public InvalidMenuSelection(String m) {
-        super(m);
+    public String getInterrogation() {
+        return (interrogation);
     }
 
-    public InvalidMenuSelection(Exception e) {
-        super(e);
+    @SuppressWarnings("Unchecked")
+    public void setValue(Object value) {
+        try {
+            this.storedValue = (T) value;
+        } catch (ClassCastException e) {
+            throw new InterrogationTypeMismatch("Invalid type for interrogator", e);
+        }
     }
 
-    public InvalidMenuSelection(String m, Exception e) {
-        super(m, e);
+    public T getValue() {
+        return (storedValue);
     }
 }
 
@@ -32,6 +58,10 @@ class InputHandler {
         }
 
         return (processedInput);
+    }
+
+    public static ArrayList<Interrogator<Object>> conductInterrogation(ArrayList<Interrogator<Object>> inputParameters) {
+        return (null);
     }
 
     public static String getCredential(String prompt) {
