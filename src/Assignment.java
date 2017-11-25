@@ -31,7 +31,7 @@ class Interrogator<T> {
         return (interrogation);
     }
 
-    @SuppressWarnings("Unchecked")
+    @SuppressWarnings("unchecked")
     public void setValue(Object value) {
         try {
             this.storedValue = (T) value;
@@ -47,8 +47,8 @@ class Interrogator<T> {
 
 class InputHandler {
     public static int menuOption(String prompt) throws InvalidMenuSelection {
-        String rawInput;        /* Raw input, as provided by readEntry method */
-        int processedInput;     /* Raw input converted to an integer */
+        String rawInput;        // Raw input, as provided by readEntry method
+        int processedInput;     // Raw input converted to an integer
 
         rawInput = readEntry(prompt);
         try {
@@ -60,8 +60,16 @@ class InputHandler {
         return (processedInput);
     }
 
+    private static <T> Interrogator<T> resolveInterrogator(Interrogator<T> interrogation) {
+        String q = interrogation.getInterrogation();
+
+    }
+
+
     public static ArrayList<Interrogator<Object>> conductInterrogation(ArrayList<Interrogator<Object>> inputParameters) {
-        return (null);
+        for (Interrogator<Object> interrogator : inputParameters) {
+
+        }
     }
 
     public static String getCredential(String prompt) {
