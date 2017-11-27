@@ -18,30 +18,28 @@ class InterrogationTypeMismatch extends IllegalArgumentException {
     public InterrogationTypeMismatch(String m, Exception e) { super(m, e); }
 }
 
-class Interrogator<T> {
-    private String interrogation;
-    private T storedValue;
+class Interrogator {
+    private String question;
+    private String data;
 
-    public Interrogator(String interrogation) {
-        this.interrogation = interrogation;
-        this.storedValue = null;
+    public Interrogator (String question) {
+        this.question = question;
+        this.data = null;
     }
 
-    public String getInterrogation() {
-        return (interrogation);
+    public void setData(String data) {
+        this.data = data;
     }
 
-    @SuppressWarnings("unchecked")
-    public void setValue(Object value) {
-        try {
-            this.storedValue = (T) value;
-        } catch (ClassCastException e) {
-            throw new InterrogationTypeMismatch("Invalid type for interrogator", e);
+    public String getData() {
+        if (data == null) {
+            throw new IllegalStateException("Interrogator data unset at time of request > " + question);
         }
+        return data;
     }
 
-    public T getValue() {
-        return (storedValue);
+    public String getQuestion() {
+        return (question);
     }
 }
 
