@@ -1,3 +1,4 @@
+import jdk.internal.util.xml.impl.Input;
 import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import java.io.*;
@@ -18,44 +19,11 @@ class ClientValidationError extends IllegalStateException {
     public ClientValidationError(String m, Exception e) { super(m, e); }
 }
 
-interface IValidator {
-    boolean validate(String ans);
-}
 
-class StringValidator implements IValidator {
-    public boolean validate(String ans) { return (ans.length() > 0); }
-}
 
-class NumericValidator implements IValidator {
-    public boolean validate(String ans) {
-        return (ans.matches("\\d+(\\.\\d+)?"));
-    }
-}
-
-class DateValidator implements IValidator {
-    public boolean validate(String ans) {
-        boolean success;
-        String regexMatch;
-
-        success = false;
-        // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
-        regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
-
-        // 012345678
-        // 01-Jan-17
-        if (ans.matches(regexMatch)) {
-            int day = Integer.parseInt(ans.substring(0, 2));
-            int year = Integer.parseInt(ans.substring(7, 9));
-
-            if (day >= 1 && day <= 31 && year >= 1900) {
-                success = true;
-            }
-        }
-
-        return (success);
-    }
-}
-
+/**
+ *
+ */
 class InputHandler {
     private static final String questionBoundary = " >> ";
     public static int menuOption(String prompt) throws InvalidMenuSelection {
@@ -72,7 +40,8 @@ class InputHandler {
         return (processedInput);
     }
 
-    public static String interrogate(String question, IValidator validator) throws ClientValidationError {
+    private static String interrogate(String question, ValidationService.IValidator validator)
+            throws ClientValidationError {
         String ans;
 
         ans = readEntry(question + questionBoundary);
@@ -83,7 +52,8 @@ class InputHandler {
         }
     }
 
-    public static String[] massInterrogate(String question, IValidator validator) throws ClientValidationError {
+    private static String[] massInterrogate(String question, ValidationService.IValidator validator)
+            throws ClientValidationError {
         boolean loop;
         ArrayList<String> answers;
         String answerCurrent;
@@ -111,13 +81,33 @@ class InputHandler {
 
         return (answersFinal);
     }
+    
+    private static int interrogateNumeric(String question, ValidationService.NumericValidator validator)
+            throws ClientValidationError {
+        return (Integer.parseInt(interrogate(question, validator)));
+    }
+    
+    private static int[] massInterrogateNumeric(String question, ValidationService.NumericValidator validator)
+            throws ClientValidationError {
+        return (parseIntMass(massInterrogate(question, validator)));
+    }
+
+    private static int[] parseIntMass(String[] stringArray) {
+        int[] newInts = new int[stringArray.length];
+
+        for (int i = 0; i < stringArray.length; i++) {
+            newInts[i] = Integer.parseInt(stringArray[i]);
+        }
+
+        return (newInts);
+    }
 
     public static String[] getCredentials() throws ClientValidationError {
         String[] answers;
         answers = new String[2];
 
-        answers[0] = interrogate("Please enter your username.", new StringValidator());
-        answers[1] = interrogate("Please enter your password.", new StringValidator());
+        answers[0] = interrogate("Please enter your username.", new ValidationService.StringValidator());
+        answers[1] = interrogate("Please enter your password.", new ValidationService.StringValidator());
 
         return (answers);
     }
@@ -138,6 +128,67 @@ class InputHandler {
         catch (IOException e)
         {
             return "";
+        }
+    }
+
+    private static class ValidationService {
+        interface IValidator {
+            boolean validate(String ans);
+        }
+
+        public static class StringValidator implements IValidator {
+            public boolean validate(String ans) { return (ans.length() > 0); }
+        }
+
+        public static class NumericValidator implements IValidator {
+            public boolean validate(String ans) {
+                return (ans.matches("\\d+(\\.\\d+)?"));
+            }
+        }
+
+        public static class DateValidator implements IValidator {
+            public boolean validate(String ans) {
+                boolean success;
+                String regexMatch;
+
+                success = false;
+                // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
+                regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
+
+                // 012345678
+                // 01-Jan-17
+                if (ans.matches(regexMatch)) {
+                    int day = Integer.parseInt(ans.substring(0, 2));
+                    int year = Integer.parseInt(ans.substring(7, 9));
+
+                    if (day >= 1 && day <= 31 && year >= 1900) {
+                        success = true;
+                    }
+                }
+
+                return (success);
+            }
+        }
+    }
+
+    public static class OptionHandler {
+        public static void processOption1(Connection conn) {
+            int[]  productIDs;
+            int[]  quantities;
+            String orderDate;
+            int    staffID;
+            ValidationService.NumericValidator numVal;
+            ValidationService.DateValidator datVal;
+            
+            numVal = new ValidationService.NumericValidator();
+            datVal = new ValidationService.DateValidator();
+
+            productIDs = InputHandler.massInterrogateNumeric("Enter product IDs", numVal);
+            quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
+            orderDate  = InputHandler.interrogate("Enter date of order", datVal);
+            staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
+
+            Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
         }
     }
 }
@@ -283,11 +334,13 @@ class Assignment {
             }
 
             switch (input) {
-                case 1:     System.out.println("Option 1");
+                case 1:
+                            InputHandler.OptionHandler.processOption1(conn);
                             break;
                 case 2:     System.out.println("Option 2");
                             break;
                 case 9:     loop = false;
+                            System.out.println("Goodbye.");
                             break;
                 default:    System.out.println("Invalid selection.");
             }
