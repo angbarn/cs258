@@ -11,53 +11,53 @@ class InvalidMenuSelection extends IllegalStateException {
     public InvalidMenuSelection(String m, Exception e) { super(m, e); }
 }
 
-class InterrogationTypeMismatch extends IllegalArgumentException {
-    public InterrogationTypeMismatch()                      { super(    ); }
-    public InterrogationTypeMismatch(String m)              { super(m   ); }
-    public InterrogationTypeMismatch(Exception e)           { super(e   ); }
-    public InterrogationTypeMismatch(String m, Exception e) { super(m, e); }
+class ClientValidationError extends IllegalStateException {
+    public ClientValidationError()                      { super(    ); }
+    public ClientValidationError(String m)              { super(m   ); }
+    public ClientValidationError(Exception e)           { super(e   ); }
+    public ClientValidationError(String m, Exception e) { super(m, e); }
 }
 
-class Interrogator {
-    private String question;
-    private String data;
+interface IValidator {
+    boolean validate(String ans);
+}
 
-    public Interrogator (String question) {
-        this.question = question;
-        this.data = null;
-    }
+class StringValidator implements IValidator {
+    public boolean validate(String ans) { return (ans.length() > 0); }
+}
 
-    public boolean setData(String data) {
-        this.data = data;
-    }
-
-    public String getData() throws IllegalStateException {
-        if (data == null) {
-            throw new IllegalStateException("Interrogator data unset at time of request > " + question);
-        }
-        return data;
-    }
-
-    public String getQuestion() {
-        return (question);
+class NumericValidator implements IValidator {
+    public boolean validate(String ans) {
+        return (ans.matches("\\d+(\\.\\d+)?"));
     }
 }
 
-class NumericInterrogator extends Interrogator {
-    public NumericInterrogator (String question) {
-        super(question);
-    }
+class DateValidator implements IValidator {
+    public boolean validate(String ans) {
+        boolean success;
+        String regexMatch;
 
-    @Override
-    public boolean setData(String data) {
-        if (!data.matches("(\\d+)(.\\d+)?")) {
-            return (false);
+        success = false;
+        // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
+        regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
+
+        // 012345678
+        // 01-Jan-17
+        if (ans.matches(regexMatch)) {
+            int day = Integer.parseInt(ans.substring(0, 2));
+            int year = Integer.parseInt(ans.substring(7, 9));
+
+            if (day >= 1 && day <= 31 && year >= 1900) {
+                success = true;
+            }
         }
-        return (super.setData(data));
+
+        return (success);
     }
 }
 
 class InputHandler {
+    private static final String questionBoundary = " >> ";
     public static int menuOption(String prompt) throws InvalidMenuSelection {
         String rawInput;        // Raw input, as provided by readEntry method
         int processedInput;     // Raw input converted to an integer
@@ -72,28 +72,54 @@ class InputHandler {
         return (processedInput);
     }
 
-    private static boolean resolveInterrogator(Interrogator interrogation) {
-        String question;
-        String response;
-        boolean success;
+    public static String interrogate(String question, IValidator validator) throws ClientValidationError {
+        String ans;
 
-        success = false;
-
-        question = interrogation.getQuestion();
-        response = readEntry(question);
-        interrogation.setData(response);
-
-        return (success);
-    }
-
-    public static void conductInterrogation(ArrayList<Interrogator> inputParameters) {
-        for (Interrogator i : inputParameters) {
-            resolveInterrogator(i);
+        ans = readEntry(question + questionBoundary);
+        if (validator.validate(ans)) {
+            return (ans);
+        } else {
+            throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
         }
     }
 
-    public static String getCredentials(String prompt) {
-        Interrogator
+    public static String[] massInterrogate(String question, IValidator validator) throws ClientValidationError {
+        boolean loop;
+        ArrayList<String> answers;
+        String answerCurrent;
+        String[] answersFinal;
+
+        loop = true;
+
+        answers = new ArrayList<>();
+        System.out.println(question);
+        while (loop) {
+            answerCurrent = readEntry(questionBoundary);
+            if (answerCurrent.equals("")) {
+                loop = false;
+            } else if (validator.validate(answerCurrent)) {
+                answers.add(answerCurrent);
+            } else {
+                throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
+            }
+        }
+
+        answersFinal = new String[answers.size()];
+        for (int i = 0; i < answers.size(); i++) {
+            answersFinal[i] = answers.get(i);
+        }
+
+        return (answersFinal);
+    }
+
+    public static String[] getCredentials() throws ClientValidationError {
+        String[] answers;
+        answers = new String[2];
+
+        answers[0] = interrogate("Please enter your username.", new StringValidator());
+        answers[1] = interrogate("Please enter your password.", new StringValidator());
+
+        return (answers);
     }
 
     private static String readEntry(String prompt) {
@@ -209,31 +235,30 @@ class Assignment {
 
     public static Connection getConnection()
     {
-        String user;
-        String passwrd;
+        String[] credentials;
         Connection conn;
 
-        try
-        {
+        try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
-        }
-        catch (ClassNotFoundException x)
-        {
+        } catch (ClassNotFoundException x) {
             System.out.println ("Driver could not be loaded");
         }
 
-        user = InputHandler.getCredential("Enter database account:");
-        passwrd = InputHandler.getCredential("Enter a password:");
-        try
-        {
-            conn = DriverManager.getConnection("jdbc:oracle:thin:@daisy.warwick.ac.uk:1521:daisy",user,passwrd);
-            return conn;
+        credentials = InputHandler.getCredentials();
+        conn = null;
+        try {
+            conn = DriverManager.getConnection(
+                    "jdbc:oracle:thin:@daisy.warwick.ac.uk:1521:daisy",
+                    credentials[0],
+                    credentials[1]
+            );
+        } catch (ClientValidationError e) {
+            System.out.println("Error entering credentials.");
+        } catch(SQLException e) {
+            System.out.println("Error retrieving connection.");
         }
-        catch(SQLException e)
-        {
-            System.out.println("Error retrieving connection");
-            return null;
-        }
+
+        return (conn);
     }
 
     public static void exit(Connection conn) throws SQLException {
