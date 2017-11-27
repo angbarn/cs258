@@ -27,11 +27,11 @@ class Interrogator {
         this.data = null;
     }
 
-    public void setData(String data) {
+    public boolean setData(String data) {
         this.data = data;
     }
 
-    public String getData() {
+    public String getData() throws IllegalStateException {
         if (data == null) {
             throw new IllegalStateException("Interrogator data unset at time of request > " + question);
         }
@@ -40,6 +40,20 @@ class Interrogator {
 
     public String getQuestion() {
         return (question);
+    }
+}
+
+class NumericInterrogator extends Interrogator {
+    public NumericInterrogator (String question) {
+        super(question);
+    }
+
+    @Override
+    public boolean setData(String data) {
+        if (!data.matches("(\\d+)(.\\d+)?")) {
+            return (false);
+        }
+        return (super.setData(data));
     }
 }
 
@@ -58,20 +72,28 @@ class InputHandler {
         return (processedInput);
     }
 
-    private static <T> Interrogator<T> resolveInterrogator(Interrogator<T> interrogation) {
-        String q = interrogation.getInterrogation();
+    private static boolean resolveInterrogator(Interrogator interrogation) {
+        String question;
+        String response;
+        boolean success;
 
+        success = false;
+
+        question = interrogation.getQuestion();
+        response = readEntry(question);
+        interrogation.setData(response);
+
+        return (success);
     }
 
-
-    public static ArrayList<Interrogator<Object>> conductInterrogation(ArrayList<Interrogator<Object>> inputParameters) {
-        for (Interrogator<Object> interrogator : inputParameters) {
-
+    public static void conductInterrogation(ArrayList<Interrogator> inputParameters) {
+        for (Interrogator i : inputParameters) {
+            resolveInterrogator(i);
         }
     }
 
-    public static String getCredential(String prompt) {
-        return (readEntry(prompt));
+    public static String getCredentials(String prompt) {
+        Interrogator
     }
 
     private static String readEntry(String prompt) {
