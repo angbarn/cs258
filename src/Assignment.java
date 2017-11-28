@@ -166,13 +166,14 @@ class InputHandler {
             datVal = new ValidationService.DateValidator();
         }
 
-        private class BaseProductData {
-            private int[] productIDs;
+        private static class BaseProductData {
+            private int[] productIds;
             private int[] quantities;
+            private int staffId;
             private String orderDate;
 
-            private void getProductList() {
-                ArrayList<Integer> temporaryProductIDs = new ArrayList<>();
+            private void inputProductList() {
+                ArrayList<Integer> temporaryProductIds = new ArrayList<>();
                 ArrayList<Integer> temporaryQuantities = new ArrayList<>();
                 boolean loop = true;
                 boolean success = true;
@@ -188,59 +189,73 @@ class InputHandler {
                     } else {
                         newQuantity = interrogateNumeric("Please enter product quantity", numVal);
 
-                        temporaryProductIDs.add(newId);
+                        temporaryProductIds.add(newId);
                         temporaryQuantities.add(newQuantity);
                     }
                 }
 
-                productIDs = new int[temporaryProductIDs.size()];
+                productIds = new int[temporaryProductIds.size()];
                 quantities = new int[temporaryQuantities.size()];
 
-                for (int i = 0; i < productIDs.length; i++) {
-                    productIDs[i] = temporaryProductIDs.get(i);
+                for (int i = 0; i < productIds.length; i++) {
+                    productIds[i] = temporaryProductIds.get(i);
                     quantities[i] = temporaryQuantities.get(i);
                 }
             }
 
-            private void getOrderDate() {
+            private void inputOrderDate() {
                 orderDate = interrogate("Please enter the date of the order", datVal);
             }
 
-            public BaseProductData (Connection conn) {
-                try {
-                    getProductList();
-                } catch (ClientValidationError e) {
-                    System.out.println("Error entering product data.");
-                }
-
-                try {
-                    getOrderDate();
-                } catch (ClientValidationError e) {
-                    System.out.println("Error entering order date.");
-                }
+            private void inputStaffId() {
+                orderDate = interrogate("Please enter your staff ID", numVal);
             }
 
-            public int[] getProductIDs() {
-                return (productIDs);
+            public int[] getProductIds() {
+                return (productIds);
             }
 
             public int[] getQuantities() {
                 return (quantities);
             }
 
-            public String getDate() {
+            public String getOrderDate() {
                 return (orderDate);
+            }
+
+            public int getStaffId() {
+                return (staffId);
+            }
+
+            public BaseProductData () {
+                try {
+                    inputProductList();
+                } catch (ClientValidationError e) {
+                    System.out.println("Error entering product data.");
+                }
+
+                try {
+                    inputOrderDate();
+                } catch (ClientValidationError e) {
+                    System.out.println("Error entering order date.");
+                }
+
+                try {
+                    inputStaffId();
+                } catch (ClientValidationError e) {
+                    System.out.println("Error entering staff ID.");
+                }
             }
         }
 
         public static void processOption1(Connection conn) {
             try {
-                BaseProductData container = new BaseProductData();
+                BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
 
-                int[]   productIDs = container.getProductIDs();
-                int[]   quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
-                String  orderDate  = InputHandler.interrogate("Enter date of order", datVal);
-                int     staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
+                int[]   productIDs = container.getProductIds();
+                int[]   quantities = container.getQuantities();
+                String  orderDate  = container.getOrderDate();
+                int     staffID    = container.getStaffId();
 
                 Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
             } catch (ClientValidationError e) {
