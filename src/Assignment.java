@@ -370,9 +370,10 @@ class Assignment {
             System.out.println ("Driver could not be loaded");
         }
 
-        credentials = InputHandler.getCredentials();
         conn = null;
         try {
+            credentials = InputHandler.getCredentials();
+
             conn = DriverManager.getConnection(
                     "jdbc:oracle:thin:@daisy.warwick.ac.uk:1521:daisy",
                     credentials[0],
