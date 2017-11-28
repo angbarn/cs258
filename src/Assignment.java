@@ -233,7 +233,86 @@ class InputHandler {
             }
         }
 
-        public static void processOption1(Connection conn) {
+        private static class CustomerInformation {
+            private String fName;
+            private String lName;
+
+            private String collectionDate;
+            private boolean collectionSet;
+
+            private String deliveryDate;
+            private String house;
+            private String street;
+            private String city;
+            private boolean deliverySet;
+
+            private void inputName() {
+                fName = interrogate("What is the customer's first name?", strVal);
+                lName = interrogate("What is the customer's second name?", strVal);
+            }
+
+            public void inputCollection() {
+                if (collectionSet) {
+                    collectionDate = interrogate("What is the collection date?", datVal);
+
+                    collectionSet = true;
+                } else {
+                    throw new IllegalStateException("Collection information retrieved twice");
+                }
+            }
+
+            public void inputDelivery() {
+                if (deliverySet) {
+                    deliveryDate = interrogate("What is the delivery date?", datVal);
+                    house = interrogate("What is the house number?", strVal);
+                    street = interrogate("What is the street?", strVal);
+                    city = interrogate("What is the city?", strVal);
+
+                    deliverySet = true;
+                } else {
+                    throw new IllegalStateException("Delivery information retrieved twice");
+                }
+            }
+
+            public String getFName() {
+                return (fName);
+            }
+
+            public String getLName() {
+                return (lName);
+            }
+
+            private String retrieveData(String value) {
+                return (retrieveData(value, true));
+            }
+
+            private String retrieveData(String value, boolean guard) {
+                if (guard) {
+                    return value;
+                } else {
+                    throw new IllegalStateException("Data requested before set");
+                }
+            }
+
+            public String getFName()          { retrieveData(fName); }
+            public String getLName()          { retrieveData(lName); }
+
+            public String getCollectionDate() { retreiveData(collectionDate, collectionSet); }
+
+            public String getCollectionDate() { retreiveData(deliveryDate, deliverySet); }
+            public String getCollectionDate() { retreiveData(house,        deliverySet); }
+            public String getCollectionDate() { retreiveData(street,       deliverySet); }
+            public String getCollectionDate() { retreiveData(city,         deliverySet); }
+
+            public CustomerInformation () throws ClientValidationError {
+                inputName();
+
+                collectionSet = false;
+                deliverySet = false;
+            }
+        }
+
+        public static void processOption1(Connection conn) throws ClientValidationError {
             try {
                 BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
 
@@ -248,7 +327,7 @@ class InputHandler {
             }
         }
 
-        public static void processOption2(Connection conn) {
+        public static void processOption2(Connection conn) throws ClientValidationError {
             try {
                 BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
 
@@ -264,6 +343,17 @@ class InputHandler {
             } catch (ClientValidationError e) {
                 System.out.println("The information you entered is invalid.");
             }
+        }
+
+        public static void processOption3(Connection conn) throws ClientValidationError {
+            BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
+
+            int[] productIds        = container.getProductIds();
+            int[] quantities        = container.getQuantities();
+            String orderDate        = container.getOrderDate();
+            int staffId             = container.getStaffId();
+
+            Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, )
         }
     }
 }
