@@ -782,15 +782,15 @@ class Assignment {
         
         for (int i = 0; i < 3; i++) menu.append("\n");
     
-        menu.append("1) option 1\n");
-        menu.append("2) option 2\n");
-        menu.append("3) option 3\n");
-        menu.append("4) option 4\n");
-        menu.append("5) option 5\n");
-        menu.append("6) option 6\n");
-        menu.append("7) option 7\n");
-        menu.append("8) option 8\n");
-        menu.append("9) quit\n");
+        menu.append("1) In-Store purchase\n");
+        menu.append("2) Collection\n");
+        menu.append("3) Delivery\n");
+        menu.append("4) Biggest sellers\n");
+        menu.append("5) Reserved stock\n");
+        menu.append("6) Staff life-time success\n");
+        menu.append("7) Staff contribution\n");
+        menu.append("8) Employees of the year\n");
+        menu.append("0) Quit\n");
         
         return (menu.toString());
     }
@@ -820,7 +820,7 @@ class Assignment {
                             break;
                 case 3:     InputHandler.OptionHandler.inputOption3(conn);
                             break;
-                case 9:     loop = false;
+                case 0:     loop = false;
                             System.out.println("Goodbye.");
                             break;
                 default:    System.out.println("Invalid selection.");
