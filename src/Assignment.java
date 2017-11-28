@@ -166,7 +166,7 @@ class InputHandler {
             datVal = new ValidationService.DateValidator();
         }
 
-        private class basicProductData {
+        private class BaseProductData {
             private int[] productIDs;
             private int[] quantities;
             private String orderDate;
@@ -206,7 +206,7 @@ class InputHandler {
                 orderDate = interrogate("Please enter the date of the order", datVal);
             }
 
-            public basicProductData (Connection conn) {
+            public BaseProductData (Connection conn) {
                 try {
                     getProductList();
                 } catch (ClientValidationError e) {
@@ -219,15 +219,25 @@ class InputHandler {
                     System.out.println("Error entering order date.");
                 }
             }
-        }
 
-        private static void processBasicProductData(Connection conn) {
+            public int[] getProductIDs() {
+                return (productIDs);
+            }
 
+            public int[] getQuantities() {
+                return (quantities);
+            }
+
+            public String getDate() {
+                return (orderDate);
+            }
         }
 
         public static void processOption1(Connection conn) {
             try {
-                int[]   productIDs = InputHandler.massInterrogateNumeric("Enter product IDs", numVal);
+                BaseProductData container = new BaseProductData();
+
+                int[]   productIDs = container.getProductIDs();
                 int[]   quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
                 String  orderDate  = InputHandler.interrogate("Enter date of order", datVal);
                 int     staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
