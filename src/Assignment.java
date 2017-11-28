@@ -5,6 +5,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 
+@SuppressWarnings("serial")
 class InvalidMenuSelection extends IllegalStateException {
     public InvalidMenuSelection()                      { super(    ); }
     public InvalidMenuSelection(String m)              { super(m   ); }
@@ -12,7 +13,8 @@ class InvalidMenuSelection extends IllegalStateException {
     public InvalidMenuSelection(String m, Exception e) { super(m, e); }
 }
 
-class ClientValidationError extends IllegalStateException {
+@SuppressWarnings("serial")
+class ClientValidationError extends Exception {
     public ClientValidationError()                      { super(    ); }
     public ClientValidationError(String m)              { super(m   ); }
     public ClientValidationError(Exception e)           { super(e   ); }
@@ -172,7 +174,7 @@ class InputHandler {
             private int staffId;
             private String orderDate;
 
-            private void inputProductList() {
+            private void inputProductList() throws ClientValidationError {
                 ArrayList<Integer> temporaryProductIds = new ArrayList<>();
                 ArrayList<Integer> temporaryQuantities = new ArrayList<>();
                 boolean loop = true;
@@ -203,11 +205,11 @@ class InputHandler {
                 }
             }
 
-            private void inputOrderDate() {
+            private void inputOrderDate() throws ClientValidationError {
                 orderDate = interrogate("Please enter the date of the order", datVal);
             }
 
-            private void inputStaffId() {
+            private void inputStaffId() throws ClientValidationError {
                 orderDate = interrogate("Please enter your staff ID", numVal);
             }
 
@@ -227,24 +229,10 @@ class InputHandler {
                 return (staffId);
             }
 
-            public BaseProductData () {
-                try {
-                    inputProductList();
-                } catch (ClientValidationError e) {
-                    System.out.println("Error entering product data.");
-                }
-
-                try {
-                    inputOrderDate();
-                } catch (ClientValidationError e) {
-                    System.out.println("Error entering order date.");
-                }
-
-                try {
-                    inputStaffId();
-                } catch (ClientValidationError e) {
-                    System.out.println("Error entering staff ID.");
-                }
+            public BaseProductData () throws ClientValidationError {
+                inputProductList();
+                inputOrderDate();
+                inputStaffId();
             }
         }
 
@@ -265,9 +253,17 @@ class InputHandler {
 
         public static void processOption2(Connection conn) {
             try {
-                int[] prod;
+                BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
 
-                Assignment.option2(conn, productIDs, quantities, orderDate, collectionDate, fName, lName, staffID);
+                int[] productIds        = container.getProductIds();
+                int[] quantities        = container.getQuantities();
+                String orderDate        = container.getOrderDate();
+                int staffId             = container.getStaffId();
+                String collectionDate   = InputHandler.interrogate("What is the collection date?", strVal);
+                String fName            = InputHandler.interrogate("What is the customer's first name?", strVal);
+                String lName            = InputHandler.interrogate("What is the customer's last name?", strVal);
+
+                Assignment.option2(conn, productIds, quantities, orderDate, collectionDate, fName, lName, staffId);
             } catch (ClientValidationError e) {
                 System.out.println("The information you entered is invalid.");
             }
