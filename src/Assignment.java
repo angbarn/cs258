@@ -187,7 +187,7 @@ class InputHandler {
     
         /**
          * Ensures that the user's input matches the date format required by SQL, and that the date is "valid" in the
-         * loosest sense of the word - the year isn't too early, and the day is between 1 and 31.
+         * loosest sense of the word - the day is between 1 and 31.
          */
         public static class DateValidator implements IValidator {
             /**
@@ -203,14 +203,14 @@ class InputHandler {
                 success = false;
                 // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
                 regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
-
+                
                 if (ans.matches(regexMatch)) {
                     // 012345678
                     // 01-Jan-17
                     int day = Integer.parseInt(ans.substring(0, 2));
                     int year = Integer.parseInt(ans.substring(7, 9));
 
-                    if (day >= 1 && day <= 31 && year >= 1900) {
+                    if (day >= 1 && day <= 31) {
                         success = true;
                     }
                 }
@@ -437,7 +437,7 @@ class InputHandler {
              * @throws IllegalStateException If this method is called twice for one instance of this class
              */
             public void inputCollection() throws ClientValidationError, IllegalStateException {
-                if (collectionSet) {
+                if (!collectionSet) {
                     collectionDate = interrogate("What is the collection date?", datVal);
 
                     collectionSet = true;
@@ -453,7 +453,7 @@ class InputHandler {
              * @throws IllegalStateException If this method is called twice for one instance of this class.
              */
             public void inputDelivery() throws ClientValidationError, IllegalStateException {
-                if (deliverySet) {
+                if (!deliverySet) {
                     deliveryDate = interrogate("What is the delivery date?", datVal);
                     house = interrogate("What is the house number?", strVal);
                     street = interrogate("What is the street?", strVal);
