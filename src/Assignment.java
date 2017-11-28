@@ -4,18 +4,12 @@ import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 class InvalidMenuSelection extends IllegalStateException {
-    public InvalidMenuSelection()                      { super(    ); }
     public InvalidMenuSelection(String m)              { super(m   ); }
-    public InvalidMenuSelection(Exception e)           { super(e   ); }
-    public InvalidMenuSelection(String m, Exception e) { super(m, e); }
 }
 
 @SuppressWarnings("serial")
 class ClientValidationError extends Exception {
-    public ClientValidationError()                      { super(    ); }
     public ClientValidationError(String m)              { super(m   ); }
-    public ClientValidationError(Exception e)           { super(e   ); }
-    public ClientValidationError(String m, Exception e) { super(m, e); }
 }
 
 /**
@@ -58,36 +52,6 @@ class InputHandler {
         } else {
             throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
         }
-    }
-
-    private static String[] massInterrogate(String question, ValidationService.IValidator validator)
-            throws ClientValidationError {
-        boolean loop;
-        ArrayList<String> answers;
-        String answerCurrent;
-        String[] answersFinal;
-
-        loop = true;
-
-        answers = new ArrayList<>();
-        System.out.println(question);
-        while (loop) {
-            answerCurrent = readEntry(questionBoundary);
-            if (answerCurrent.equals("")) {
-                loop = false;
-            } else if (validator.validate(answerCurrent)) {
-                answers.add(answerCurrent);
-            } else {
-                throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
-            }
-        }
-
-        answersFinal = new String[answers.size()];
-        for (int i = 0; i < answers.size(); i++) {
-            answersFinal[i] = answers.get(i);
-        }
-
-        return (answersFinal);
     }
 
     private static int interrogateNumeric(String question, ValidationService.NumericValidator validator)
@@ -367,7 +331,7 @@ class InputHandler {
             String lName = customer.getLName();
             String house = customer.getHouse();
             String street = customer.getStreet();
-            String city = customer.getStreet();
+            String city = customer.getCity();
 
              Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, house, street,
                      city, staffId);
@@ -501,7 +465,7 @@ class Assignment {
         System.out.println("Database system exited.");
     }
     
-    public static String getMenu() {
+    private static String getMenu() {
         StringBuilder menu = new StringBuilder();
         
         for (int i = 0; i < 3; i++) menu.append("\n");
@@ -548,5 +512,7 @@ class Assignment {
                 default:    System.out.println("Invalid selection.");
             }
         }
+        
+        exit(conn);
     }
 }
