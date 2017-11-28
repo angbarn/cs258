@@ -2,22 +2,47 @@ import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Thrown when a user attempts to make an invalid menu selection.
+ */
 @SuppressWarnings("serial")
 class InvalidMenuSelection extends IllegalStateException {
-    public InvalidMenuSelection(String m)              { super(m   ); }
-}
-
-@SuppressWarnings("serial")
-class ClientValidationError extends Exception {
-    public ClientValidationError(String m)              { super(m   ); }
+    /**
+     * Throw exception with error message.
+     * @param m The message to provide.
+     */
+    public InvalidMenuSelection(String m) { super(m ); }
 }
 
 /**
- *
+ * Thrown when Java-side validation fails. A checked exception so that we can be sure we catch it and deal with it
+ * properly.
+ */
+@SuppressWarnings("serial")
+class ClientValidationError extends Exception {
+    /**
+     * Throw exception with error message.
+     * @param m The message to provide
+     */
+    public ClientValidationError(String m) { super(m ); }
+}
+
+/**
+ * Handles all user input for the program.
  */
 class InputHandler {
+    /**
+     * Printer at the end of an interrogation question. Separates the user's answer from the question.
+     * Rather than include it in all questions, it's much easier to include it once and concat when it's required.
+     */
     private static final String questionBoundary = " >> ";
-
+    
+    /**
+     * Turns a user's raw text input into a usable integer that we can switch on later.
+     * @param prompt The raw text from the user's selection input
+     * @return The raw text converted to integer format
+     * @throws InvalidMenuSelection If the text cannot be converted to an integer
+     */
     public static int menuOption(String prompt) throws InvalidMenuSelection {
         String rawInput;        // Raw input, as provided by readEntry method
         int processedInput;     // Raw input converted to an integer
@@ -31,7 +56,13 @@ class InputHandler {
 
         return (processedInput);
     }
-
+    
+    /**
+     * Gets the username and password from the user.
+     * This information is returned in an array, where the first item is the username, and the second is that password.
+     * @return A string array, where the first item is the username, and the second is the password
+     * @throws ClientValidationError When one of the inputs is the empty string
+     */
     public static String[] getCredentials() throws ClientValidationError {
         String[] answers;
         answers = new String[2];
@@ -41,7 +72,16 @@ class InputHandler {
 
         return (answers);
     }
-
+    
+    /**
+     * Poses a question to the user, and performs validation on their input, before returning it back.
+     * A higher-level interface to readEntry(...).
+     * Questions automatically have {@link #questionBoundary} appended. Do not add a custom ": " or equivalent.
+     * @param question The prompt to give the user. Automatically has {@link #questionBoundary} appended.
+     * @param validator The {@link InputHandler:IValidator} to use to validate an input.
+     * @return The string provided by the user.
+     * @throws ClientValidationError When the validation is unsuccessful.
+     */
     private static String interrogate(String question, ValidationService.IValidator validator)
             throws ClientValidationError {
         String ans;
@@ -53,12 +93,28 @@ class InputHandler {
             throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
         }
     }
-
+    
+    /**
+     * @see #interrogate(String, ValidationService.IValidator)
+     * A slight twist, in that inputs are automatically cast to integers when returned. This means that any validator
+     * used must be a subclass of {@link ValidationService:NumericValidator}. Currently, the only class which fits this
+     * bill is {@code NumericValidator} itself, but for the purposes of future proofing, we aren't taking out the
+     * requirement to specify a validator just yet.
+     * @param question The prompt to give the user. Automatically has {@link #questionBoundary} appended.
+     * @param validator The {@link InputHandler:IValidator} to use to validate an input.
+     * @return Whatever was provided by the user cast to an integer
+     * @throws ClientValidationError When the validation is unsuccessful.
+     */
     private static int interrogateNumeric(String question, ValidationService.NumericValidator validator)
             throws ClientValidationError {
         return (Integer.parseInt(interrogate(question, validator)));
     }
-
+    
+    /**
+     * Reads an entry from the user.
+     * @param prompt The prompt to give the user when requesting an input
+     * @return Whatever the user gave us as an input
+     */
     private static String readEntry(String prompt) {
         try
         {
@@ -77,23 +133,69 @@ class InputHandler {
             return "";
         }
     }
-
+    
+    /**
+     * Contains various classes which deal with Java-side validation of user input.
+     * Since most of the validation we want to do is SQL-side, validators are relatively basic.
+     * However, a certain amount of Java-side validation is nice for the purposes of UX.
+     */
     private static class ValidationService {
+        /**
+         * Specifies that the class is a validator - that is, it will test a user's input to see if it conforms to the
+         * required formatting guidelines.
+         * A relatively powerful concept, but used fairly simply in this program.
+         */
         interface IValidator {
+            /**
+             * Ensure that the provided user input conforms to the required formatting standards.
+             * @param ans The provided user input
+             * @return {@code true} if the user's input is correctly formatted. {@code false} otherwise.
+             */
             boolean validate(String ans);
         }
-
+    
+        /**
+         * Ensures that the user's input isn't just the empty string. A relatively general purpose validator, for all
+         * those times where we don't really need a validator, but the method requires us to have one anyway.
+         */
         public static class StringValidator implements IValidator {
+            /**
+             * Ensure length is greater than 0 (i.e., input is not the empty string)
+             * @param ans The provided user input
+             * @return {@code true} if the user's input is longer than "". {@code false} otherwise.
+             */
             public boolean validate(String ans) { return (ans.length() > 0); }
         }
-
+    
+        /**
+         * Ensures that the user's input is numeric - i.e., it's an integer.
+         * The program will never need to deal with decimal numbers, so there is no need to allow for them.
+         * If this were ever the case, the regex "\d+(\.\d+)?" seems to achieve this job relatively cleanly.
+         * It's important that any subclass of NumericValidator results in a string for which Integer.parseInt(...)
+         * succeeds.
+         */
         public static class NumericValidator implements IValidator {
+            /**
+             * Ensures there are no non-digit characters in the string.
+             * @param ans The provided user input
+             * @return {@code true} if the user's input is made up of only digits. {@code false} otherwise.
+             */
             public boolean validate(String ans) {
-                return (ans.matches("\\d+(\\.\\d+)?"));
+                return (ans.matches("\\d+"));
             }
         }
-
+    
+        /**
+         * Ensures that the user's input matches the date format required by SQL, and that the date is "valid" in the
+         * loosest sense of the word - the year isn't too early, and the day is between 1 and 31.
+         */
         public static class DateValidator implements IValidator {
+            /**
+             * Ensures that the user's input is a valid date format (DD-Mon-YY). Nothing else is acceptable for the
+             * purposes of this solution, so should be rejected.
+             * @param ans The provided user input
+             * @return {@code true} if validation is successful. {@code false} otherwise.
+             */
             public boolean validate(String ans) {
                 boolean success;
                 String regexMatch;
@@ -102,9 +204,9 @@ class InputHandler {
                 // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
                 regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
 
-                // 012345678
-                // 01-Jan-17
                 if (ans.matches(regexMatch)) {
+                    // 012345678
+                    // 01-Jan-17
                     int day = Integer.parseInt(ans.substring(0, 2));
                     int year = Integer.parseInt(ans.substring(7, 9));
 
@@ -117,104 +219,224 @@ class InputHandler {
             }
         }
     }
-
+    
+    /**
+     * Handles fetching the required user inputs for a given menu item, performs some light processing to package up
+     * inputs correctly, and then passes these to the resulting methods.
+     * This allows the menu switch statement to be much cleaner.
+     */
     public static class OptionHandler {
+        /**
+         * A validator to ensure inputs are strings
+         */
         private static ValidationService.StringValidator strVal;
+        /**
+         * A validator to ensure inputs will cast to integers successfully.
+         */
         private static ValidationService.NumericValidator numVal;
+        /**
+         * A validator to ensure an input is a correctly formatted date.
+         */
         private static ValidationService.DateValidator datVal;
-
+    
         static {
+            // Instantiate instances of each validator for later use
+            // A new validator could be created each time, but this makes code neater
             strVal = new ValidationService.StringValidator();
             numVal = new ValidationService.NumericValidator();
             datVal = new ValidationService.DateValidator();
         }
-
+    
+        /**
+         * Handles fetching data for a basic order. This means a list of product IDs, a list of quantities of each of
+         * these products, a staff ID and an order date.
+         * This basic information is required for the first three options, so it makes sense to package it up.
+         * Furthermore, it's slightly more intuitive to alternate between requesting a product ID, and the quantity for
+         * this same product, versus requesting a list of all IDs, then a list of all quantities for each corresponding
+         * ID.
+         */
         private static class BaseProductData {
+            /**
+             * An array of product IDs.
+             */
             private int[] productIds;
+            /**
+             * An array of quantities for these product IDs.
+             */
             private int[] quantities;
+            /**
+             * The ID of the staff member making the order.
+             */
             private int staffId;
+            /**
+             * The date that the order was made.
+             */
             private String orderDate;
-
+    
+            /**
+             * Repeatedly requests a new product ID and a corresponding quantity for this product, until the list is
+             * terminated with a product ID of 0.
+             * @throws ClientValidationError If any input at any point fails to validate.
+             */
             private void inputProductList() throws ClientValidationError {
                 ArrayList<Integer> temporaryProductIds = new ArrayList<>();
                 ArrayList<Integer> temporaryQuantities = new ArrayList<>();
                 boolean loop = true;
 
+                // Get all pairs of product ID and quantities
                 while (loop) {
                     int newId;
                     int newQuantity;
 
                     newId = interrogateNumeric("Please enter product ID (0 to terminate)", numVal);
 
+                    // If we need to terminate, do so
                     if (newId == 0) {
                         loop = false;
+                    // Otherwise, get a quantity
                     } else {
                         newQuantity = interrogateNumeric("Please enter product quantity", numVal);
 
+                        // Add ID and quantity to each array list
                         temporaryProductIds.add(newId);
                         temporaryQuantities.add(newQuantity);
                     }
                 }
 
+                // Write the array lists to corresponding arrays, because we need to give inputs like that.
                 productIds = new int[temporaryProductIds.size()];
                 quantities = new int[temporaryQuantities.size()];
-
                 for (int i = 0; i < productIds.length; i++) {
                     productIds[i] = temporaryProductIds.get(i);
                     quantities[i] = temporaryQuantities.get(i);
                 }
             }
-
+    
+            /**
+             * Requests a date from the user for the order.
+             * @throws ClientValidationError If the date entered is invalid in some way
+             */
             private void inputOrderDate() throws ClientValidationError {
                 orderDate = interrogate("Please enter the date of the order", datVal);
             }
-
+    
+            /**
+             * Requests a staff ID from the user
+             * @throws ClientValidationError If the ID entered is invalid in some way
+             */
             private void inputStaffId() throws ClientValidationError {
                 staffId = interrogateNumeric("Please enter your staff ID", numVal);
             }
-
+    
+            /**
+             * Gets the array of product IDs.
+             * @return The array of product IDs.
+             */
             public int[] getProductIds() {
                 return (productIds);
             }
-
+    
+            /**
+             * Gets the array of quantities.
+             * @return The array of quantities.
+             */
             public int[] getQuantities() {
                 return (quantities);
             }
-
+    
+            /**
+             * Gets the date the order was made.
+             * @return The date the order was made.
+             */
             public String getOrderDate() {
                 return (orderDate);
             }
-
+    
+            /**
+             * Gets the staff ID of whoever entered the order
+             * @return The staff ID of whoever entered the order
+             */
             public int getStaffId() {
                 return (staffId);
             }
-
+    
+            /**
+             * Constructor method that fills in information.
+             * @throws ClientValidationError If any of the inputs fail at any point.
+             */
             public BaseProductData () throws ClientValidationError {
                 inputProductList();
                 inputOrderDate();
                 inputStaffId();
             }
         }
-
+    
+        /**
+         * Handles fetching information about a customer. This is relevant for collection or deliveries. Since both
+         * require slightly different information, but with some slight overlap, the class only collects data relevant
+         * to both at first.
+         * Either the {@see #inputDelivery} or {@see #inputCollection} methods must be used to "prime" the class to
+         * provide data for either delivery or collections. Since the type of data we own can't be known until we're
+         * instantiated, a couple of "guards" are provided. If collection/delivery information is provided twice, an
+         * exception is thrown. If an attempt is made to retrieve either before the class has collected this data, the
+         * same exception is thrown.
+         */
         private static class CustomerInformation {
+            /**
+             * The first name of the customer
+             */
             private String fName;
+            /**
+             * The second name of the customer
+             */
             private String lName;
-
+    
+            /**
+             * The collection date for the order
+             */
             private String collectionDate;
+            /**
+             * The guard for turning this {@code CustomerInformation} object into one that deals with collections.
+             */
             private boolean collectionSet;
-
+    
+            /**
+             * The delivery date for the order
+             */
             private String deliveryDate;
+            /**
+             * The house number/name for the order
+             */
             private String house;
+            /**
+             * The street address for the order
+             */
             private String street;
+            /**
+             * The city/town/etc. for the order
+             */
             private String city;
+            /**
+             * The guard for turning this {@code CustomerInformation} object into one that deals with deliveries.
+             */
             private boolean deliverySet;
-
+    
+            /**
+             * Collects basic name information common to both order types.
+             * @throws ClientValidationError If either name provided is the empty string.
+             */
             private void inputName() throws ClientValidationError {
                 fName = interrogate("What is the customer's first name?", strVal);
                 lName = interrogate("What is the customer's second name?", strVal);
             }
-
-            public void inputCollection() throws ClientValidationError {
+    
+            /**
+             * Requests information for a collection order (i.e., the collection date). Disables the guard blocking
+             * retrieval of collection data.
+             * @throws ClientValidationError If the date provided is not in the correct format
+             * @throws IllegalStateException If this method is called twice for one instance of this class
+             */
+            public void inputCollection() throws ClientValidationError, IllegalStateException {
                 if (collectionSet) {
                     collectionDate = interrogate("What is the collection date?", datVal);
 
@@ -223,8 +445,14 @@ class InputHandler {
                     throw new IllegalStateException("Collection information retrieved twice");
                 }
             }
-
-            public void inputDelivery() throws ClientValidationError {
+    
+            /**
+             * Requests information for a delivery order (i.e., a delivery date, and an address in three parts).
+             * Disables the guard blocking retrieval of delivery data.
+             * @throws ClientValidationError If any information provided fails to validate.
+             * @throws IllegalStateException If this method is called twice for one instance of this class.
+             */
+            public void inputDelivery() throws ClientValidationError, IllegalStateException {
                 if (deliverySet) {
                     deliveryDate = interrogate("What is the delivery date?", datVal);
                     house = interrogate("What is the house number?", strVal);
@@ -236,29 +464,85 @@ class InputHandler {
                     throw new IllegalStateException("Delivery information retrieved twice");
                 }
             }
-
+    
+            /**
+             * An override which assumes that the guard allows the retrieval. This function actually doesn't do
+             * anything, and {@code value} is equivalent to {@code retrieveData(value)}, but this makes formatting of
+             * code neater below.
+             * @param value The value to return
+             * @return The data provided (always)
+             */
             private String retrieveData(String value) {
                 return (retrieveData(value, true));
             }
-
-            private String retrieveData(String value, boolean guard) {
+    
+            /**
+             * Attempts to retrieve the provided data, but only if the provided guard allows it.
+             * @param value The data we want to retrieve.
+             * @param guard The guard we need to ask permission from to retrieve the data
+             * @return The data we want to retrieve ({@code value})
+             * @throws IllegalStateException If the guard blocks retrieval of the data
+             */
+            private String retrieveData(String value, boolean guard) throws IllegalStateException {
                 if (guard) {
                     return value;
                 } else {
                     throw new IllegalStateException("Data requested before set");
                 }
             }
-
+    
+            /**
+             * Retrieves the customer's first name.
+             * @return The customer's first name.
+             */
             public String getFName()            { return (retrieveData(fName)); }
+    
+            /**
+             * Retrieves the customer's last name.
+             * @return The customer's last name.
+             */
             public String getLName()            { return (retrieveData(lName)); }
-
+    
+            /**
+             * Retrieves the order's collection date, if this order is a collection.
+             * @return The order's collection date.
+             * @throws IllegalStateException If {@see #inputCollection} has not been called first.
+             */
             public String getCollectionDate()   { return (retrieveData(collectionDate, collectionSet)); }
-
+    
+            /**
+             * Retrieves the order's delivery date, if this order is a delivery.
+             * @return The order's delivery date.
+             * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
+             */
             public String getDeliveryDate()     { return (retrieveData(deliveryDate, deliverySet)); }
+            
+            /**
+             * Retrieves the order's house address, if this order is a delivery.
+             * @return The order's house address.
+             * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
+             */
             public String getHouse()            { return (retrieveData(house,        deliverySet)); }
+            
+            /**
+             * Retrieves the order's street address, if this order is a delivery.
+             * @return The order's street address.
+             * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
+             */
             public String getStreet()           { return (retrieveData(street,       deliverySet)); }
+            
+            /**
+             * Retrieves the order's city address, if this order is a delivery.
+             * @return The order's city address.
+             * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
+             */
             public String getCity()             { return (retrieveData(city,         deliverySet)); }
-
+    
+            /**
+             * Retrieves basic information common to all orders (customer name), and enables the guards against
+             * retrieving either collection or delivery data.
+             * @throws ClientValidationError If validation of any input fails.
+             */
             public CustomerInformation () throws ClientValidationError {
                 inputName();
 
@@ -266,8 +550,13 @@ class InputHandler {
                 deliverySet = false;
             }
         }
-
-        public static void processOption1(Connection conn) {
+    
+        /**
+         * Gets user input required for menu option 1, and then performs menu option 1.
+         * (In store purchase).
+         * @param conn The connection to database.
+         */
+        public static void inputOption1(Connection conn) {
             BaseProductData container;
             try {
                 container = new InputHandler.OptionHandler.BaseProductData();
@@ -283,8 +572,13 @@ class InputHandler {
     
             Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
         }
-
-        public static void processOption2(Connection conn) {
+    
+        /**
+         * Gets user input required for menu option 2, and then performs menu option 2.
+         * (Collection)
+         * @param conn The connection to the database.
+         */
+        public static void inputOption2(Connection conn) {
             BaseProductData container;
             CustomerInformation customer;
             
@@ -307,8 +601,13 @@ class InputHandler {
     
             Assignment.option2(conn, productIds, quantities, orderDate, collectionDate, fName, lName, staffId);
         }
-
-        public static void processOption3(Connection conn)  {
+    
+        /**
+         * Gets user input required for menu option 3, and then performs menu option 3.
+         * (Delivery)
+         * @param conn The connection to the database.
+         */
+        public static void inputOption3(Connection conn)  {
             BaseProductData container;
             CustomerInformation customer;
             
@@ -429,7 +728,11 @@ class Assignment {
     {
         // Incomplete - Code for option 8 goes here
     }
-
+    
+    /**
+     * Gets the user's credentials, and uses them to connect to the database.
+     * @return The connection object provided by connecting to the database.
+     */
     public static Connection getConnection()
     {
         String[] credentials;
@@ -458,13 +761,22 @@ class Assignment {
 
         return (conn);
     }
-
+    
+    /**
+     * Cleans up just before the program exits.
+     * @param conn The database connection to close.
+     * @throws SQLException If there is an error when closing the database connection.
+     */
     public static void exit(Connection conn) throws SQLException {
         conn.close();
 
         System.out.println("Database system exited.");
     }
     
+    /**
+     * Provides a menu to the user so that they may make selections.
+     * @return A menu formatted as a single string.
+     */
     private static String getMenu() {
         StringBuilder menu = new StringBuilder();
         
@@ -491,6 +803,7 @@ class Assignment {
         int input;
 
         while (loop) {
+            // Attempt to get a selection
             try {
                 System.out.println(getMenu());
                 input = InputHandler.menuOption("Please make a selection >> ");
@@ -499,12 +812,13 @@ class Assignment {
                 input = -1;
             }
 
+            // Attempt to work out what the user wanted based on their selection.
             switch (input) {
-                case 1:     InputHandler.OptionHandler.processOption1(conn);
+                case 1:     InputHandler.OptionHandler.inputOption1(conn);
                             break;
-                case 2:     InputHandler.OptionHandler.processOption2(conn);
+                case 2:     InputHandler.OptionHandler.inputOption2(conn);
                             break;
-                case 3:     InputHandler.OptionHandler.processOption3(conn);
+                case 3:     InputHandler.OptionHandler.inputOption3(conn);
                             break;
                 case 9:     loop = false;
                             System.out.println("Goodbye.");
