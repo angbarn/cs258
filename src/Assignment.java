@@ -246,12 +246,12 @@ class InputHandler {
             private String city;
             private boolean deliverySet;
 
-            private void inputName() {
+            private void inputName() throws ClientValidationError {
                 fName = interrogate("What is the customer's first name?", strVal);
                 lName = interrogate("What is the customer's second name?", strVal);
             }
 
-            public void inputCollection() {
+            public void inputCollection() throws ClientValidationError {
                 if (collectionSet) {
                     collectionDate = interrogate("What is the collection date?", datVal);
 
@@ -261,7 +261,7 @@ class InputHandler {
                 }
             }
 
-            public void inputDelivery() {
+            public void inputDelivery() throws ClientValidationError {
                 if (deliverySet) {
                     deliveryDate = interrogate("What is the delivery date?", datVal);
                     house = interrogate("What is the house number?", strVal);
@@ -272,14 +272,6 @@ class InputHandler {
                 } else {
                     throw new IllegalStateException("Delivery information retrieved twice");
                 }
-            }
-
-            public String getFName() {
-                return (fName);
-            }
-
-            public String getLName() {
-                return (lName);
             }
 
             private String retrieveData(String value) {
@@ -294,15 +286,15 @@ class InputHandler {
                 }
             }
 
-            public String getFName()          { retrieveData(fName); }
-            public String getLName()          { retrieveData(lName); }
+            public String getFName()            { return (retrieveData(fName)); }
+            public String getLName()            { return (retrieveData(lName)); }
 
-            public String getCollectionDate() { retreiveData(collectionDate, collectionSet); }
+            public String getCollectionDate()   { return (retrieveData(collectionDate, collectionSet)); }
 
-            public String getCollectionDate() { retreiveData(deliveryDate, deliverySet); }
-            public String getCollectionDate() { retreiveData(house,        deliverySet); }
-            public String getCollectionDate() { retreiveData(street,       deliverySet); }
-            public String getCollectionDate() { retreiveData(city,         deliverySet); }
+            public String getDeliveryDate()     { return (retrieveData(deliveryDate, deliverySet)); }
+            public String getHouse()            { return (retrieveData(house,        deliverySet)); }
+            public String getStreet()           { return (retrieveData(street,       deliverySet)); }
+            public String getCity()             { return (retrieveData(city,         deliverySet)); }
 
             public CustomerInformation () throws ClientValidationError {
                 inputName();
@@ -347,13 +339,14 @@ class InputHandler {
 
         public static void processOption3(Connection conn) throws ClientValidationError {
             BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
+            CustomerInformation customerData = new InputHandler.OptionHandler.CustomerInformation();
 
             int[] productIds        = container.getProductIds();
             int[] quantities        = container.getQuantities();
             String orderDate        = container.getOrderDate();
             int staffId             = container.getStaffId();
 
-            Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, )
+            // Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, )
         }
     }
 }
