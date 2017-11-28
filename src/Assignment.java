@@ -173,22 +173,19 @@ class InputHandler {
 
     public static class OptionHandler {
         public static void processOption1(Connection conn) {
-            int[]  productIDs;
-            int[]  quantities;
-            String orderDate;
-            int    staffID;
-            ValidationService.NumericValidator numVal;
-            ValidationService.DateValidator datVal;
-            
-            numVal = new ValidationService.NumericValidator();
-            datVal = new ValidationService.DateValidator();
+            ValidationService.NumericValidator numVal = new ValidationService.NumericValidator();
+            ValidationService.DateValidator datVal = new ValidationService.DateValidator();
 
-            productIDs = InputHandler.massInterrogateNumeric("Enter product IDs", numVal);
-            quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
-            orderDate  = InputHandler.interrogate("Enter date of order", datVal);
-            staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
-
-            Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
+            try {
+                int[]   productIDs = InputHandler.massInterrogateNumeric("Enter product IDs", numVal);
+                int[]   quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
+                String  orderDate  = InputHandler.interrogate("Enter date of order", datVal);
+                int     staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
+    
+                Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
+            } catch (ClientValidationError e) {
+                System.out.println("The information you entered is invalid.");
+            }
         }
     }
 }
