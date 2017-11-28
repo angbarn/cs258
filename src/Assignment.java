@@ -19,13 +19,12 @@ class ClientValidationError extends IllegalStateException {
     public ClientValidationError(String m, Exception e) { super(m, e); }
 }
 
-
-
 /**
  *
  */
 class InputHandler {
     private static final String questionBoundary = " >> ";
+    
     public static int menuOption(String prompt) throws InvalidMenuSelection {
         String rawInput;        // Raw input, as provided by readEntry method
         int processedInput;     // Raw input converted to an integer
@@ -38,6 +37,16 @@ class InputHandler {
         }
 
         return (processedInput);
+    }
+    
+    public static String[] getCredentials() throws ClientValidationError {
+        String[] answers;
+        answers = new String[2];
+        
+        answers[0] = interrogate("Please enter your username.", new ValidationService.StringValidator());
+        answers[1] = interrogate("Please enter your password.", new ValidationService.StringValidator());
+        
+        return (answers);
     }
 
     private static String interrogate(String question, ValidationService.IValidator validator)
@@ -90,26 +99,6 @@ class InputHandler {
     private static int[] massInterrogateNumeric(String question, ValidationService.NumericValidator validator)
             throws ClientValidationError {
         return (parseIntMass(massInterrogate(question, validator)));
-    }
-
-    private static int[] parseIntMass(String[] stringArray) {
-        int[] newInts = new int[stringArray.length];
-
-        for (int i = 0; i < stringArray.length; i++) {
-            newInts[i] = Integer.parseInt(stringArray[i]);
-        }
-
-        return (newInts);
-    }
-
-    public static String[] getCredentials() throws ClientValidationError {
-        String[] answers;
-        answers = new String[2];
-
-        answers[0] = interrogate("Please enter your username.", new ValidationService.StringValidator());
-        answers[1] = interrogate("Please enter your password.", new ValidationService.StringValidator());
-
-        return (answers);
     }
 
     private static String readEntry(String prompt) {
@@ -172,10 +161,56 @@ class InputHandler {
     }
 
     public static class OptionHandler {
+        private static ValidationService.StringValidator strVal;
+        private static ValidationService.NumericValidator numVal;
+        private static ValidationService.DateValidator datVal;
+        
+        static {
+            strVal = new ValidationService.StringValidator();
+            numVal = new ValidationService.NumericValidator();
+            datVal = new ValidationService.DateValidator();
+        }
+        
+        private class basicProductData {
+            private int[] productIDs;
+            private int[] quantities;
+            private String orderDate;
+            private final String listTerminator = "";
+            
+            public basicProductData (Connection conn) {
+                ArrayList<Integer> temporaryProductIDs = new ArrayList<>();
+                ArrayList<Integer> temporaryQuantities = new ArrayList<>();
+                boolean loop = true;
+                
+                while (loop) {
+                    try {
+                        String newID = interrogate("Please enter product ID", numVal);
+                        String newQu = interrogate("Please enter product quantity", numVal);
+                        
+                        if (newID.equals(listTerminator)) {
+                            loop = false;
+                        } else {
+                            temporaryProductIDs.add(Integer.parseInt(newID));
+                            temporaryQuantities.add(Integer.parseInt(newQu));
+                        }
+                        
+                        
+                    } catch (ClientValidationError e) {
+                        System.out.println("Error entering data.");
+                        loop = false;
+                    }
+                }
+                productIDs = InputHandler.massInterrogateNumeric("", numVal);
+                quantities = InputHandler.massInterrogateNumeric("", numVal);
+                
+            }
+        }
+        
+        private static void processBasicProductData(Connection conn) {
+        
+        }
+        
         public static void processOption1(Connection conn) {
-            ValidationService.NumericValidator numVal = new ValidationService.NumericValidator();
-            ValidationService.DateValidator datVal = new ValidationService.DateValidator();
-
             try {
                 int[]   productIDs = InputHandler.massInterrogateNumeric("Enter product IDs", numVal);
                 int[]   quantities = InputHandler.massInterrogateNumeric("Enter quantities", numVal);
@@ -183,6 +218,16 @@ class InputHandler {
                 int     staffID    = InputHandler.interrogateNumeric("Enter staff ID", numVal);
     
                 Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
+            } catch (ClientValidationError e) {
+                System.out.println("The information you entered is invalid.");
+            }
+        }
+        
+        public static void processOption2(Connection conn) {
+            try {
+                int[] prod
+                
+                Assignment.option2(conn, productIDs, quantities, orderDate, collectionDate, fName, lName, staffID);
             } catch (ClientValidationError e) {
                 System.out.println("The information you entered is invalid.");
             }
