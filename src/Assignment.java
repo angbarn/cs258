@@ -175,7 +175,6 @@ class InputHandler {
                 ArrayList<Integer> temporaryProductIds = new ArrayList<>();
                 ArrayList<Integer> temporaryQuantities = new ArrayList<>();
                 boolean loop = true;
-                boolean success = true;
 
                 while (loop) {
                     int newId;
@@ -207,7 +206,7 @@ class InputHandler {
             }
 
             private void inputStaffId() throws ClientValidationError {
-                orderDate = interrogate("Please enter your staff ID", numVal);
+                staffId = interrogateNumeric("Please enter your staff ID", numVal);
             }
 
             public int[] getProductIds() {
@@ -304,49 +303,74 @@ class InputHandler {
             }
         }
 
-        public static void processOption1(Connection conn) throws ClientValidationError {
+        public static void processOption1(Connection conn) {
+            BaseProductData container;
             try {
-                BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
-
-                int[]   productIDs = container.getProductIds();
-                int[]   quantities = container.getQuantities();
-                String  orderDate  = container.getOrderDate();
-                int     staffID    = container.getStaffId();
-
-                Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
+                container = new InputHandler.OptionHandler.BaseProductData();
             } catch (ClientValidationError e) {
                 System.out.println("The information you entered is invalid.");
+                return;
             }
+    
+            int[]   productIDs = container.getProductIds();
+            int[]   quantities = container.getQuantities();
+            String  orderDate  = container.getOrderDate();
+            int     staffID    = container.getStaffId();
+    
+            Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
         }
 
-        public static void processOption2(Connection conn) throws ClientValidationError {
+        public static void processOption2(Connection conn) {
+            BaseProductData container;
+            CustomerInformation customer;
+            
             try {
-                BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
-
-                int[] productIds        = container.getProductIds();
-                int[] quantities        = container.getQuantities();
-                String orderDate        = container.getOrderDate();
-                int staffId             = container.getStaffId();
-                String collectionDate   = InputHandler.interrogate("What is the collection date?", strVal);
-                String fName            = InputHandler.interrogate("What is the customer's first name?", strVal);
-                String lName            = InputHandler.interrogate("What is the customer's last name?", strVal);
-
-                Assignment.option2(conn, productIds, quantities, orderDate, collectionDate, fName, lName, staffId);
+                container = new InputHandler.OptionHandler.BaseProductData();
+                customer = new InputHandler.OptionHandler.CustomerInformation();
+                customer.inputCollection();
             } catch (ClientValidationError e) {
                 System.out.println("The information you entered is invalid.");
+                return;
             }
+    
+            int[] productIds        = container.getProductIds();
+            int[] quantities        = container.getQuantities();
+            String orderDate        = container.getOrderDate();
+            int staffId             = container.getStaffId();
+            String collectionDate   = customer.getCollectionDate();
+            String fName            = customer.getFName();
+            String lName            = customer.getLName();
+    
+            Assignment.option2(conn, productIds, quantities, orderDate, collectionDate, fName, lName, staffId);
         }
 
-        public static void processOption3(Connection conn) throws ClientValidationError {
-            BaseProductData container = new InputHandler.OptionHandler.BaseProductData();
-            CustomerInformation customerData = new InputHandler.OptionHandler.CustomerInformation();
+        public static void processOption3(Connection conn)  {
+            BaseProductData container;
+            CustomerInformation customer;
+            
+            try {
+                container = new InputHandler.OptionHandler.BaseProductData();
+                customer = new InputHandler.OptionHandler.CustomerInformation();
+                customer.inputDelivery();
+            } catch (ClientValidationError e) {
+                System.out.println("The information you entered is invalid.");
+                return;
+            }
 
             int[] productIds        = container.getProductIds();
             int[] quantities        = container.getQuantities();
             String orderDate        = container.getOrderDate();
             int staffId             = container.getStaffId();
+            
+            String deliveryDate = customer.getDeliveryDate();
+            String fName = customer.getFName();
+            String lName = customer.getLName();
+            String house = customer.getHouse();
+            String street = customer.getStreet();
+            String city = customer.getStreet();
 
-            // Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, )
+             Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, house, street,
+                     city, staffId);
         }
     }
 }
@@ -476,6 +500,24 @@ class Assignment {
 
         System.out.println("Database system exited.");
     }
+    
+    public static String getMenu() {
+        StringBuilder menu = new StringBuilder();
+        
+        for (int i = 0; i < 3; i++) menu.append("\n");
+    
+        menu.append("1) option 1\n");
+        menu.append("2) option 2\n");
+        menu.append("3) option 3\n");
+        menu.append("4) option 4\n");
+        menu.append("5) option 5\n");
+        menu.append("6) option 6\n");
+        menu.append("7) option 7\n");
+        menu.append("8) option 8\n");
+        menu.append("9) quit\n");
+        
+        return (menu.toString());
+    }
 
     public static void main(String args[]) throws SQLException, IOException
     {
@@ -486,6 +528,7 @@ class Assignment {
 
         while (loop) {
             try {
+                System.out.println(getMenu());
                 input = InputHandler.menuOption("Please make a selection >> ");
             } catch (InvalidMenuSelection e) {
                 System.out.println("Please enter a valid selection.\n\n");
@@ -493,10 +536,11 @@ class Assignment {
             }
 
             switch (input) {
-                case 1:
-                            InputHandler.OptionHandler.processOption1(conn);
+                case 1:     InputHandler.OptionHandler.processOption1(conn);
                             break;
-                case 2:     System.out.println("Option 2");
+                case 2:     InputHandler.OptionHandler.processOption2(conn);
+                            break;
+                case 3:     InputHandler.OptionHandler.processOption3(conn);
                             break;
                 case 9:     loop = false;
                             System.out.println("Goodbye.");
