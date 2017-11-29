@@ -109,7 +109,6 @@ FROM (SELECT ProductID,
       FROM inventory i)
 ORDER BY Sold DESC;
 
-
 /*
 -- For option 4, but it discounts incomplete orders
 CREATE VIEW ProductValueSold AS
@@ -120,3 +119,4 @@ FROM (SELECT ProductID,
       FROM inventory i)
 ORDER BY Sold DESC;
 */
+
