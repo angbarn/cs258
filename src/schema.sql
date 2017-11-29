@@ -1,5 +1,17 @@
+CREATE SEQUENCE pk_staff
+START WITH 1
+INCREMENT BY 1;
+
+CREATE SEQUENCE pk_order
+START WITH 1
+INCREMENT BY 1;
+
+CREATE SEQUENCE pk_inventory
+START WITH 1
+INCREMENT BY 1;
+
 CREATE TABLE inventory (
-    ProductID INTEGER PRIMARY KEY AUTO_INCREMENT,
+    ProductID INTEGER PRIMARY KEY,
     ProductDesc VARCHAR(30),
     ProductPrice NUMERIC(8, 2) NOT NULL,
     ProductStockAmount INTEGER NOT NULL,
@@ -7,8 +19,9 @@ CREATE TABLE inventory (
     CONSTRAINT PostiiveStock CHECK (ProductStockAmount > 0),
     CONSTRAINT PositivePrice CHECK (ProductPrice > 0)
 );
+
 CREATE TABLE orders (
-    OrderID INTEGER PRIMARY KEY AUTO_INCREMENT,
+    OrderID INTEGER PRIMARY KEY,
     OrderType VARCHAR(30) NOT NULL,
     OrderCompleted INTEGER NOT NULL,
     OrderPlaced DATE NOT NULL,
@@ -16,14 +29,16 @@ CREATE TABLE orders (
     CONSTRAINT OrderCompletedBoolean CHECK (OrderCompleted >= 0 AND OrderCompleted <= 1),
     CONSTRAINT OrderTypeEnum CHECK (OrderType = 'InStore' OR OrderType = 'Delivery' OR OrderType = 'Collection')
 );
+
 CREATE TABLE order_products (
     OrderID INTEGER NOT NULL,
     ProductID INTEGER NOT NULL,
     ProductQuantity INTEGER NOT NULL,
     FOREIGN KEY (OrderID) REFERENCES orders(OrderID),
     FOREIGN KEY (ProductID) REFERENCES inventory(ProductID),
-    CONSTRAINT PositiveQuantity (ProductQuantity > 0)
+    CONSTRAINT PositiveQuantity CHECK (ProductQuantity > 0)
 );
+
 CREATE TABLE deliveries (
     OrderID INTEGER NOT NULL,
     FName VARCHAR(30) NOT NULL,
@@ -37,6 +52,7 @@ CREATE TABLE deliveries (
     CONSTRAINT NonEmptyDeliveryHouse CHECK (LENGTH(House) > 0),
     CONSTRAINT NonEmptyDeliveryStreet CHECK (LENGTH(Street) > 0)
 );
+
 CREATE TABLE collections (
     OrderID INTEGER,
     FName VARCHAR(30) NOT NULL,
@@ -46,16 +62,39 @@ CREATE TABLE collections (
     CONSTRAINT NonEmptyCollectionFName CHECK (LENGTH(FName) > 0),
     CONSTRAINT NonEmptyCollectionLName CHECK (LENGTH(LName) > 0)
 );
+
 CREATE TABLE staff (
-    StaffID INTEGER PRIMARY KEY AUTO_INCREMENT,
+    StaffID INTEGER PRIMARY KEY,
     FName VARCHAR(30) NOT NULL,
     LName VARCHAR(30) NOT NULL,
     CONSTRAINT NonEmptyStaffFName CHECK (LENGTH(FName) > 0),
     CONSTRAINT NonEmptyStaffLName CHECK (LENGTH(LName) > 0)
 );
+
 CREATE TABLE staff_orders (
     StaffID INTEGER,
     OrderID INTEGER,
     FOREIGN KEY (StaffID) REFERENCES staff(StaffID),
     FOREIGN KEY (OrderID) REFERENCES orders(OrderID)
 );
+
+CREATE OR REPLACE TRIGGER new_staff_member_id
+BEFORE INSERT ON staff
+    FOR EACH ROW BEGIN
+        :new.StaffID := pk_staff.nextval;
+    END;
+/
+
+CREATE OR REPLACE TRIGGER new_order_id
+BEFORE INSERT ON orders
+    FOR EACH ROW BEGIN
+        :new.OrderID := pk_order.nextval;
+    END;
+/
+
+CREATE OR REPLACE TRIGGER new_product_id
+BEFORE INSERT ON inventory
+    FOR EACH ROW BEGIN
+        :new.ProductID := pk_inventory.nextval;
+    END;
+/
