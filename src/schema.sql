@@ -12,7 +12,7 @@ INCREMENT BY 1;
 
 CREATE TABLE inventory (
     ProductID INTEGER PRIMARY KEY,
-    ProductDesc VARCHAR(30),
+    ProductDesc VARCHAR(30) NOT NULL,
     ProductPrice NUMERIC(8, 2) NOT NULL,
     ProductStockAmount INTEGER NOT NULL,
     CONSTRAINT PositiveProductID CHECK (ProductID > 0),
@@ -45,6 +45,7 @@ CREATE TABLE deliveries (
     LName VARCHAR(30) NOT NULL,
     House VARCHAR(30) NOT NULL,
     Street VARCHAR(30) NOT NULL,
+    City VARCHAR(30) NOT NULL,
     DeliveryDate DATE NOT NULL,
     FOREIGN KEY (OrderID) REFERENCES orders(OrderID),
     CONSTRAINT NonEmptyDeliveryFName CHECK (LENGTH(FName) > 0),
