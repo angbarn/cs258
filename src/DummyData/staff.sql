@@ -1,0 +1,15 @@
+insert into staff (StaffID, LName, FName) values (1, 'Dohr', 'Jose');
+insert into staff (StaffID, LName, FName) values (2, 'Mattheus', 'Angel');
+insert into staff (StaffID, LName, FName) values (3, 'Marquet', 'Margaretha');
+insert into staff (StaffID, LName, FName) values (4, 'Sixsmith', 'Micheal');
+insert into staff (StaffID, LName, FName) values (5, 'Farryn', 'Beverie');
+insert into staff (StaffID, LName, FName) values (6, 'Kettlestring', 'Jodie');
+insert into staff (StaffID, LName, FName) values (7, 'Jerrim', 'Alisun');
+insert into staff (StaffID, LName, FName) values (8, 'Moyle', 'Sonny');
+insert into staff (StaffID, LName, FName) values (9, 'Sproat', 'Alanna');
+insert into staff (StaffID, LName, FName) values (10, 'Stratton', 'Margaretha');
+insert into staff (StaffID, LName, FName) values (11, 'Matysik', 'Carroll');
+insert into staff (StaffID, LName, FName) values (12, 'Gouny', 'Zandra');
+insert into staff (StaffID, LName, FName) values (13, 'Chasteau', 'Devan');
+insert into staff (StaffID, LName, FName) values (14, 'Hattam', 'Fiona');
+insert into staff (StaffID, LName, FName) values (15, 'Kippen', 'Vonny');
