@@ -99,3 +99,24 @@ BEFORE INSERT ON inventory
         :new.ProductID := pk_inventory.nextval;
     END;
 /
+
+-- For option 4
+CREATE VIEW ProductValueSold AS
+SELECT ProductID, ProductDesc, Sold
+FROM (SELECT ProductID,
+             ProductDesc,
+             (SELECT NVL(SUM(ProductQuantity), 0.0) * ProductPrice FROM order_products op WHERE ProductID = i.ProductID) AS Sold
+      FROM inventory i)
+ORDER BY Sold DESC;
+
+
+/*
+-- For option 4, but it discounts incomplete orders
+CREATE VIEW ProductValueSold AS
+SELECT ProductID, ProductDesc, Sold
+FROM (SELECT ProductID,
+             ProductDesc,
+             (SELECT NVL(SUM(ProductQuantity), 0.0) * ProductPrice FROM order_products op JOIN orders o ON o.OrderID = op.OrderID WHERE ProductID = i.ProductID AND o.OrderCompleted = 1) AS Sold
+      FROM inventory i)
+ORDER BY Sold DESC;
+*/

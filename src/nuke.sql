@@ -1,0 +1,11 @@
+DROP TABLE order_products;
+DROP TABLE deliveries;
+DROP TABLE collections;
+DROP TABLE staff_orders;
+DROP TABLE staff;
+DROP TABLE inventory;
+DROP TABLE orders;
+DROP SEQUENCE PK_staff;
+DROP SEQUENCE PK_order;
+DROP SEQUENCE PK_inventory;
+DROP VIEW ProductValueSold;
