@@ -161,5 +161,38 @@ JOIN staff s ON sspq.StaffID = s.StaffID
 WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
 ORDER BY sspq.StaffID;
 
-
-
+-- Query for option 8
+/*
+SELECT (s.FName || ' ' || s.LName) "Employee Name", value "Total value sold"
+FROM (
+    SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s
+    JOIN staff_orders so ON so.StaffID = s.StaffID
+    JOIN orders o ON o.OrderID = so.OrderID
+    JOIN order_products op ON op.OrderID = so.OrderID
+    JOIN inventory i ON i.ProductID = op.ProductID
+    WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND
+          o.OrderPlaced < TO_DATE('01-Jan-2017') + 365
+    GROUP BY s.StaffID
+) sub
+JOIN staff s ON s.StaffID = sub.StaffID
+WHERE value > 50000 AND
+      sub.StaffID IN
+      (
+          SELECT so.StaffID FROM staff_orders so
+          JOIN order_products op ON op.OrderID = so.OrderID
+          JOIN inventory i ON i.ProductID = op.ProductID
+          WHERE i.ProductID IN
+          (
+              SELECT ProductID FROM (
+                  SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) ValueSold
+                  FROM orders o
+                  JOIN order_products op ON op.OrderID = o.OrderID
+                  JOIN inventory i ON i.ProductID = op.ProductID
+                  WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') + 365
+                  GROUP BY i.ProductID
+              ) valid
+              WHERE ValueSold > 20000
+          )
+      )
+;
+*/
