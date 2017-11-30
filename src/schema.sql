@@ -16,7 +16,7 @@ CREATE TABLE inventory (
     ProductPrice NUMERIC(8, 2) NOT NULL,
     ProductStockAmount INTEGER NOT NULL,
     CONSTRAINT PositiveProductID CHECK (ProductID > 0),
-    CONSTRAINT PostiiveStock CHECK (ProductStockAmount > 0),
+    CONSTRAINT PostiiveStock CHECK (ProductStockAmount >= 0),
     CONSTRAINT PositivePrice CHECK (ProductPrice > 0)
 );
 
