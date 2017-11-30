@@ -848,7 +848,7 @@ class Assignment {
 
         if (orderPrimaryKey != -1) {
             collections__creationStatement = "INSERT INTO collections (OrderID, FName, LName, CollectionDate) VALUES" +
-                    " (" + orderPrimaryKey + ", " + fName + ", " + lName + ", " + collectionDate + ")";
+                    " (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + collectionDate + "')";
 
             try {
                 Statement stmt = conn.createStatement();
