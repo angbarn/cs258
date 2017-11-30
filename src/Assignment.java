@@ -654,12 +654,14 @@ class Assignment {
     /**
      * Performs tasks common to options 1-3
      * @param productIDs An array of productIDs associated with an order
-     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
+     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in
+     *        productIDs
      * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
      * @param staffID The id of the staff member who sold the order
      * @return The ID of the new entry into orders on success. -1 otherwise.
      */
-    private static void standardOrder(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID, String orderType, int complete) {
+    private static int standardOrder(Connection conn, int[] productIDs, int[] quantities, String orderDate,
+            int staffID, String orderType, int completed) {
         int newOrderPrimaryKey;
         int currentQuantities[];
         String orders__creationStatement;
@@ -815,7 +817,8 @@ class Assignment {
     /**
      * @param conn An open database connection
      * @param productIDs An array of productIDs associated with an order
-     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
+     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in
+     *        productIDs
      * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
      * @param staffID The id of the staff member who sold the order
      */
@@ -827,14 +830,16 @@ class Assignment {
     /**
      * @param conn An open database connection
      * @param productIDs An array of productIDs associated with an order
-     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
+     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in
+     *        productIDs
      * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
      * @param collectionDate A string in the form of 'DD-Mon-YY' that represents the date the order will be collected
      * @param fName The first name of the customer who will collect the order
      * @param LName The last name of the customer who will collect the order
      * @param staffID The id of the staff member who sold the order
      */
-    public static void option2(Connection conn, int[] productIDs, int[] quantities, String orderDate, String collectionDate, String fName, String lName, int staffID)
+    public static void option2(Connection conn, int[] productIDs, int[] quantities, String orderDate,
+            String collectionDate, String fName, String lName, int staffID)
     {
         String collections__creationStatement;
         int orderPrimaryKey;
@@ -843,7 +848,7 @@ class Assignment {
 
         if (orderPrimaryKey != -1) {
             collections__creationStatement = "INSERT INTO collections (OrderID, FName, LName, CollectionDate) VALUES" +
-                    " (" + orderPrimaryKey + ", " + fName + ", " + lName + ", " + collectionDate + ")"
+                    " (" + orderPrimaryKey + ", " + fName + ", " + lName + ", " + collectionDate + ")";
 
             try {
                 Statement stmt = conn.createStatement();
@@ -860,7 +865,8 @@ class Assignment {
     /**
      * @param conn An open database connection
      * @param productIDs An array of productIDs associated with an order
-     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
+     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in
+     *        productIDs
      * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
      * @param deliveryDate A string in the form of 'DD-Mon-YY' that represents the date the order will be delivered
      * @param fName The first name of the customer who will receive the order
@@ -870,8 +876,8 @@ class Assignment {
      * @param city The city name of the delivery address
      * @param staffID The id of the staff member who sold the order
      */
-    public static void option3(Connection conn, int[] productIDs, int[] quantities, String orderDate, String deliveryDate, String fName, String LName,
-                               String house, String street, String city, int staffID)
+    public static void option3(Connection conn, int[] productIDs, int[] quantities, String orderDate,
+            String deliveryDate, String fName, String LName, String house, String street, String city, int staffID)
     {
         // Incomplete - Code for option 3 goes here
     }
@@ -916,9 +922,9 @@ class Assignment {
     public static void option8(Connection conn, int year)
     {
         String q;
-        String d = '01-Jan-' + year;
+        String d = "01-Jan-" + year;
 
-        q = "" +
+        q = ""
         + "SELECT (s.FName || ' ' || s.LName) \"Employee Name\", value \"Total value sold\"\n"
         + "FROM (\n"
             + "SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s\n"
@@ -944,7 +950,8 @@ class Assignment {
                           + "FROM orders o\n"
                           + "JOIN order_products op ON op.OrderID = o.OrderID\n"
                           + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-                          + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') + 365\n"
+                          + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') "
+                                  + "+ 365\n"
                           + "GROUP BY i.ProductID\n"
                       + ") valid\n"
                       + "WHERE ValueSold > 20000\n"
