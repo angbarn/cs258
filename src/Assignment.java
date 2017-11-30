@@ -640,14 +640,26 @@ class InputHandler {
 
 class Assignment {
     /**
-     * @param conn An open database connection
+     * Checks to see if the provided query returns at least one reuslt.
+     * @param conn Connection to the database
+     * @param query Query to test
+     * @throws SQLException If there is an error when attempting to fetch the query
+     */
+    private static boolean checkValid(Connection conn, String query) throws SQLException {
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(query);
+        return (rs.next());
+    }
+
+    /**
+     * Performs tasks common to options 1-3
      * @param productIDs An array of productIDs associated with an order
      * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
      * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
      * @param staffID The id of the staff member who sold the order
+     * @return The ID of the new entry into orders on success. -1 otherwise.
      */
-    public static void option1(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID)
-    {
+    private static void standardOrder(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID, String orderType, int complete) {
         int newOrderPrimaryKey;
         int currentQuantities[];
         String orders__creationStatement;
@@ -655,6 +667,22 @@ class Assignment {
         String order_products__creationStatement;
         String inventory__checkStatement;
         String inventory__updateStatement;
+        
+        // Check inputs are valid
+        try {
+            if (!checkValid(conn, "SELECT * FROM staff WHERE StaffID = " + staffID)) {
+                System.out.println("Staff ID was invalid");
+                return (-1);
+            }
+            
+            if (!checkValid(conn, "SELECT TO_DATE('" + orderDate + "') FROM dual")) {
+                System.out.println("Order date was invalid");
+                return (-1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error occurred when testing inputs.");
+        }
         
         // Get currently remaining stock
         currentQuantities = new int[productIDs.length];
@@ -668,18 +696,19 @@ class Assignment {
                 ResultSet rs = stmt.executeQuery(inventory__checkStatement);
                 if (!rs.next()) {
                     System.out.println("Invalid product ID: " + productID);
+                    return (-1);
                 }
                 currentQuantities[i] = rs.getInt("PRODUCTSTOCKAMOUNT");
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred checking stock quantity.");
-                return;
+                return (-1);
             }
             
             if (currentQuantities[i] < quantity) {
                 System.out.println("Insufficient quantity for product " + productID + ": " + quantity + " requested " +
                         "but only " + currentQuantities[i] + " remains.");
-                return;
+                return (-1);
             } else {
                 // Update for when we return stock values at the end
                 currentQuantities[i] = currentQuantities[i] - quantity;
@@ -695,12 +724,12 @@ class Assignment {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error finding primary key");
-            return;
+            return (-1);
         }
     
         // Construct orders and staff_orders queries
         orders__creationStatement = "INSERT INTO orders (OrderID, OrderType, OrderCompleted, OrderPlaced) VALUES (" +
-                newOrderPrimaryKey + ", 'InStore', 1, '" + orderDate + "')";
+                newOrderPrimaryKey + ", '" + orderType + "', " + completed + ", '" + orderDate + "')";
         staff_orders__creationStatement = "INSERT INTO staff_orders (OrderID, StaffID) VALUES (" + newOrderPrimaryKey +
                 ", " + staffID + ")";
         
@@ -709,12 +738,13 @@ class Assignment {
             Statement stmt = conn.createStatement();
             stmt.executeQuery(orders__creationStatement);
         } catch (SQLIntegrityConstraintViolationException e) {
+            e.printStackTrace();
             System.out.println("Order date invalid");
-            return;
+            return (-1);
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error occurred.");
-            return;
+            return (-1);
         }
     
         // Run staff_orders query
@@ -723,11 +753,11 @@ class Assignment {
             stmt.executeQuery(staff_orders__creationStatement);
         } catch (SQLIntegrityConstraintViolationException e) {
             System.out.println("Staff ID invalid");
-            return;
+            return (-1);
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error occurred.");
-            return;
+            return (-1);
         }
         
         // Create order_products entries, and update quantities in inventory
@@ -744,11 +774,11 @@ class Assignment {
                 conn.createStatement().executeQuery(order_products__creationStatement);
             } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Product ID (" + productId + ") or quantity (" + quantity + ") invalid");
-                return;
+                return (-1);
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred");
-                return;
+                return (-1);
             }
             
             try {
@@ -757,11 +787,11 @@ class Assignment {
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Shouldn't ever happen, because we checked at the start
                 System.out.println("Insufficient product remains. Database integrity compromised.");
-                return;
+                return (-1);
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred");
-                return;
+                return (-1);
             }
         }
         
@@ -778,6 +808,20 @@ class Assignment {
             
             System.out.println(out.toString());
         }
+
+        return (newOrderPrimaryKey);
+    }
+    
+    /**
+     * @param conn An open database connection
+     * @param productIDs An array of productIDs associated with an order
+     * @param quantities An array of quantities of a product. The index of a quantity correspeonds with an index in productIDs
+     * @param orderDate A string in the form of 'DD-Mon-YY' that represents the date the order was made
+     * @param staffID The id of the staff member who sold the order
+     */
+    public static void option1(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID)
+    {
+        standardOrder(conn, productIDs, quantities, orderDate, staffID, "InStore", 1);
     }
 
     /**
@@ -790,9 +834,27 @@ class Assignment {
      * @param LName The last name of the customer who will collect the order
      * @param staffID The id of the staff member who sold the order
      */
-    public static void option2(Connection conn, int[] productIDs, int[] quantities, String orderDate, String collectionDate, String fName, String LName, int staffID)
+    public static void option2(Connection conn, int[] productIDs, int[] quantities, String orderDate, String collectionDate, String fName, String lName, int staffID)
     {
-        // Incomplete - Code for option 2 goes here
+        String collections__creationStatement;
+        int orderPrimaryKey;
+
+        orderPrimaryKey = standardOrder(conn, productIDs, quantities, orderDate, staffID, "Collection", 0);
+
+        if (orderPrimaryKey != -1) {
+            collections__creationStatement = "INSERT INTO collections (OrderID, FName, LName, CollectionDate) VALUES" +
+                    " (" + orderPrimaryKey + ", " + fName + ", " + lName + ", " + collectionDate + ")"
+
+            try {
+                Statement stmt = conn.createStatement();
+                stmt.executeQuery(collections__creationStatement);
+            } catch (SQLIntegrityConstraintViolationException e) {
+                System.out.println("Collection date invalid");                
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error occurred.");
+            }
+        }
     }
 
     /**
@@ -853,7 +915,43 @@ class Assignment {
      */
     public static void option8(Connection conn, int year)
     {
-        // Incomplete - Code for option 8 goes here
+        String q;
+        String d = '01-Jan-' + year;
+
+        q = "" +
+        + "SELECT (s.FName || ' ' || s.LName) \"Employee Name\", value \"Total value sold\"\n"
+        + "FROM (\n"
+            + "SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s\n"
+            + "JOIN staff_orders so ON so.StaffID = s.StaffID\n"
+            + "JOIN orders o ON o.OrderID = so.OrderID\n"
+            + "JOIN order_products op ON op.OrderID = so.OrderID\n"
+            + "JOIN inventory i ON i.ProductID = op.ProductID\n"
+            + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND\n"
+                  + "o.OrderPlaced < TO_DATE('01-Jan-2017') + 365\n"
+            + "GROUP BY s.StaffID\n"
+        + ") sub\n"
+        + "JOIN staff s ON s.StaffID = sub.StaffID\n"
+        + "WHERE value > 50000 AND\n"
+              + "sub.StaffID IN\n"
+              + "(\n"
+                  + "SELECT so.StaffID FROM staff_orders so\n"
+                  + "JOIN order_products op ON op.OrderID = so.OrderID\n"
+                  + "JOIN inventory i ON i.ProductID = op.ProductID\n"
+                  + "WHERE i.ProductID IN\n"
+                  + "(\n"
+                      + "SELECT ProductID FROM (\n"
+                          + "SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) ValueSold\n"
+                          + "FROM orders o\n"
+                          + "JOIN order_products op ON op.OrderID = o.OrderID\n"
+                          + "JOIN inventory i ON i.ProductID = op.ProductID\n"
+                          + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') + 365\n"
+                          + "GROUP BY i.ProductID\n"
+                      + ") valid\n"
+                      + "WHERE ValueSold > 20000\n"
+                  + ")\n"
+              + ")\n"
+        + ";";
+
     }
     
     /**
