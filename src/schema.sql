@@ -100,48 +100,56 @@ BEFORE INSERT ON inventory
     END;
 /
 
--- For option 4
+-- Get the quantity of sales for every product, including incomplete orders
+CREATE VIEW ProductQuantitySold AS
+SELECT i.ProductID id, NVL(SUM(op.ProductQuantity), 0) quantity FROM inventory i
+LEFT JOIN order_products op ON op.ProductID = i.ProductID
+GROUP BY i.ProductID
+ORDER BY i.ProductID;
+
+-- Get total value of sales from ProductQuantitySales
 CREATE VIEW ProductValueSold AS
-SELECT ProductID, ProductDesc, Sold
-FROM (SELECT ProductID,
-             ProductDesc,
-             (SELECT NVL(SUM(ProductQuantity), 0.0) * ProductPrice FROM order_products op WHERE ProductID = i.ProductID) AS Sold
-      FROM inventory i)
-ORDER BY Sold DESC;
+SELECT pqs.id, (pqs.quantity * i.ProductPrice) value FROM ProductQuantitySold pqs
+JOIN inventory i ON i.ProductID = pqs.id;
 
-/*
--- For option 4, but it discounts incomplete orders
-CREATE VIEW ProductValueSold AS
-SELECT ProductID, ProductDesc, Sold
-FROM (SELECT ProductID,
-             ProductDesc,
-             (SELECT NVL(SUM(ProductQuantity), 0.0) * ProductPrice FROM order_products op JOIN orders o ON o.OrderID = op.OrderID WHERE ProductID = i.ProductID AND o.OrderCompleted = 1) AS Sold
-      FROM inventory i)
-ORDER BY Sold DESC;
-*/
+-- Format the results of ProductValueSold (Option 4)
+CREATE VIEW FormattedValueSold AS 
+SELECT i.ProductID "Product ID",
+       i.ProductDesc "Product Description",
+       ('£' || NVL(pvs.value, 0)) "Total Value Sold"
+FROM ProductValueSold pvs
+JOIN inventory i ON i.ProductID = pvs.id
+ORDER BY "Total Value Sold" DESC;
 
--- For option 6
-CREATE VIEW StaffTopSellers AS
-SELECT so.StaffID id, SUM(i.ProductPrice) total FROM staff_orders so
-JOIN order_products op ON op.OrderID = so.OrderID
-JOIN inventory i ON i.ProductID = op.ProductID
-GROUP BY so.StaffID;
-
-CREATE VIEW FormattedTopSellers AS
-SELECT s.FName, s.LName, t.total FROM StaffTopSellers t
-JOIN staff s ON s.StaffID = t.id;
-
-/*
--- For option 6, but it discounts incomplete orders
-CREATE VIEW StaffTopSellers AS
-SELECT so.StaffID id, SUM(i.ProductPrice) total FROM staff_orders so
+-- Package together staff members by instances of products they've sold
+CREATE VIEW StaffOrderData AS
+SELECT so.StaffID, so.OrderID, op.ProductID, op.ProductQuantity FROM staff_orders so
 JOIN orders o ON o.OrderID = so.OrderID
-JOIN order_products op ON op.OrderID = so.OrderID
-JOIN inventory i ON i.ProductID = op.ProductID
-WHERE o.OrderCompleted = 1
-GROUP BY so.StaffID;
+JOIN order_products op ON op.orderID = so.OrderID;
 
+-- Group sales of the same product together
+CREATE VIEW StaffSaleProductQuantity AS
+SELECT sod.StaffID, sod.ProductID, SUM(sod.ProductQuantity) quant FROM StaffOrderData sod
+WHERE (SELECT OrderCompleted FROM orders WHERE OrderID = sod.OrderID) = 1
+GROUP BY sod.StaffID, sod.ProductID
+ORDER BY sod.StaffID;
+
+-- Calculate the total value sold from the product price
+CREATE VIEW StaffSaleProductValue AS
+SELECT sspq.StaffID, sspq.ProductID, sspq.quant*i.ProductPrice value FROM StaffSaleProductQuantity sspq
+JOIN inventory i ON i.ProductID = sspq.ProductID;
+
+-- Calculate total value sold by staff member
+CREATE VIEW StaffSaleTotalValue AS
+SELECT sspv.StaffID, SUM(sspv.value) total FROM StaffSaleProductValue sspv
+GROUP BY sspv.StaffID
+ORDER BY total;
+
+-- Format StaffSaleTotalValue so it's pretty
 CREATE VIEW FormattedTopSellers AS
-SELECT s.FName, s.LName, t.total FROM StaffTopSellers t
-JOIN staff s ON s.StaffID = t.id;
-*/
+SELECT s.FName "First Name",
+       s.LName "Last Name",
+       '£' || NVL(sstv.total, 0) "Total"
+FROM StaffSaleTotalValue sstv
+RIGHT JOIN staff S on s.StaffID = sstv.StaffID
+ORDER BY NVL(sstv.total, 0) DESC;
