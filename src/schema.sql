@@ -147,8 +147,7 @@ ORDER BY total;
 
 -- Format StaffSaleTotalValue so it's pretty
 CREATE VIEW FormattedTopSellers AS
-SELECT s.FName "First Name",
-       s.LName "Last Name",
+SELECT s.FName || ' ' || s.LName "Employee Name",
        '£' || NVL(sstv.total, 0) "Total"
 FROM StaffSaleTotalValue sstv
 RIGHT JOIN staff S on s.StaffID = sstv.StaffID
