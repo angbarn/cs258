@@ -153,3 +153,14 @@ SELECT s.FName "First Name",
 FROM StaffSaleTotalValue sstv
 RIGHT JOIN staff S on s.StaffID = sstv.StaffID
 ORDER BY NVL(sstv.total, 0) DESC;
+
+-- Output the quantity of sales by staff members of all products selling over 20000 worth of value
+CREATE VIEW TopSellerSalesByStaff AS
+SELECT s.FName || ' ' || s.LName EmployeeName, sspq.ProductID, sspq.quant FROM StaffSaleProductQuantity sspq
+JOIN staff s ON sspq.StaffID = s.StaffID
+WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
+ORDER BY sspq.StaffID;
+
+
+
+WHERE sstv.total > 50000

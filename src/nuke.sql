@@ -16,3 +16,4 @@ DROP VIEW StaffSaleProductQuantity;
 DROP VIEW StaffSaleProductValue;
 DROP VIEW StaffSaleTotalValue;
 DROP VIEW FormattedTopSellers;
+DROP VIEW TopSellerSalesByStaff;
