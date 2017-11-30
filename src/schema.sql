@@ -79,26 +79,26 @@ CREATE TABLE staff_orders (
     FOREIGN KEY (OrderID) REFERENCES orders(OrderID)
 );
 
-CREATE OR REPLACE TRIGGER new_staff_member_id
-BEFORE INSERT ON staff
-    FOR EACH ROW BEGIN
-        :new.StaffID := pk_staff.nextval;
-    END;
-/
-
-CREATE OR REPLACE TRIGGER new_order_id
-BEFORE INSERT ON orders
-    FOR EACH ROW BEGIN
-        :new.OrderID := pk_order.nextval;
-    END;
-/
-
-CREATE OR REPLACE TRIGGER new_product_id
-BEFORE INSERT ON inventory
-    FOR EACH ROW BEGIN
-        :new.ProductID := pk_inventory.nextval;
-    END;
-/
+--CREATE OR REPLACE TRIGGER new_staff_member_id
+--BEFORE INSERT ON staff
+--    FOR EACH ROW BEGIN
+--        :new.StaffID := pk_staff.nextval;
+--    END;
+--/
+--
+--CREATE OR REPLACE TRIGGER new_order_id
+--BEFORE INSERT ON orders
+--    FOR EACH ROW BEGIN
+--        :new.OrderID := pk_order.nextval;
+--    END;
+--/
+--
+--CREATE OR REPLACE TRIGGER new_product_id
+--BEFORE INSERT ON inventory
+--    FOR EACH ROW BEGIN
+--        :new.ProductID := pk_inventory.nextval;
+--    END;
+--/
 
 -- Get the quantity of sales for every product, including incomplete orders
 CREATE VIEW ProductQuantitySold AS
@@ -162,7 +162,6 @@ WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value
 ORDER BY sspq.StaffID;
 
 -- Query for option 8
-/*
 SELECT (s.FName || ' ' || s.LName) "Employee Name", value "Total value sold"
 FROM (
     SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s
@@ -195,4 +194,3 @@ WHERE value > 50000 AND
           )
       )
 ;
-*/

@@ -639,8 +639,6 @@ class InputHandler {
 }
 
 class Assignment {
-
-
     /**
      * @param conn An open database connection
      * @param productIDs An array of productIDs associated with an order
@@ -650,7 +648,20 @@ class Assignment {
      */
     public static void option1(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID)
     {
-        // Incomplete - Code for option 1 goes here
+        int newOrderPrimaryKey;
+        String orders__creationStatement;
+        String staff_orders__creationStatement;
+        String order_products__creationStatement;
+        String inventory__updateStatement;
+        
+        Statement stmt = conn.createStatement();
+        ResultSet pkQuery = stmt.executeQuery("SELECT pk_order.nextval FROM dual;");
+        newOrderPrimaryKey = pkQuery.next().getInt("NEXTVAL");
+        System.out.println(newOrderPrimaryKey);
+        
+        orders__creationStatement = "INSERT INTO orders (OrderID, OrderType, OrderCompleted, OrderPlaced) VALUES (" +
+                newOrderPrimaryKey + ", 'InStore', 1, " + orderDate + ")";
+        System.out.println(orders__creationStatement);
     }
 
     /**
