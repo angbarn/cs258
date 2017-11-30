@@ -649,19 +649,113 @@ class Assignment {
     public static void option1(Connection conn, int[] productIDs, int[] quantities, String orderDate, int staffID)
     {
         int newOrderPrimaryKey;
+        int currentQuantities[];
         String orders__creationStatement;
         String staff_orders__creationStatement;
         String order_products__creationStatement;
+        String inventory__checkStatement;
         String inventory__updateStatement;
         
-        Statement stmt = conn.createStatement();
-        ResultSet pkQuery = stmt.executeQuery("SELECT pk_order.nextval FROM dual;");
-        newOrderPrimaryKey = pkQuery.next().getInt("NEXTVAL");
-        System.out.println(newOrderPrimaryKey);
+        // Get currently remaining stock
+        currentQuantities = new int[productIDs.length];
+        for (int i = 0; i < productIDs.length; i++) {
+            int productID = productIDs[i];
+            int quantity = quantities[i];
+            inventory__checkStatement = "SELECT ProductStockAmount FROM inventory WHERE ProductID = " + productID;
+            
+            try {
+                ResultSet rs = conn.createStatement().executeQuery();
+                if (!rs.next()) {
+                    System.out.println("Invalid product ID: " + productID);
+                }
+                currentQuantities[i] = rs.getInt("PRODUCTSTOCKAMOUNT");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error occurred checking stock quantity.");
+                return;
+            }
+            
+            if (currentQuantities[i] < quantity) {
+                System.out.println("Insufficient quantity for product " + productID + ": " + quantity +" requested" +
+                        "but only " + currentQuantities[i] + " remains.");
+                // Update for when we return stock values at the end
+                currentQuantities[i] = currentQuantities[i] - 1;
+            }
+        }
         
+        // Get primary key of new order
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet pkQuery = stmt.executeQuery("SELECT pk_order.nextval FROM dual");
+            pkQuery.next();
+            newOrderPrimaryKey = pkQuery.getInt("NEXTVAL");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error finding primary key");
+            return;
+        }
+    
+        // Construct orders and staff_orders queries
         orders__creationStatement = "INSERT INTO orders (OrderID, OrderType, OrderCompleted, OrderPlaced) VALUES (" +
-                newOrderPrimaryKey + ", 'InStore', 1, " + orderDate + ")";
-        System.out.println(orders__creationStatement);
+                newOrderPrimaryKey + ", 'InStore', 1, '" + orderDate + "')";
+        staff_orders__creationStatement = "INSERT INTO staff_orders (OrderID, StaffID) VALUES (" + newOrderPrimaryKey +
+                ", " + staffID + ")";
+        
+        // Run orders query
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeQuery(orders__creationStatement);
+        } catch (SQLIntegrityConstraintViolationException e) {
+            System.out.println("Order date invalid");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error occurred.");
+            return;
+        }
+    
+        // Run staff_orders query
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeQuery(staff_orders__creationStatement);
+        } catch (SQLIntegrityConstraintViolationException e) {
+            System.out.println("Staff ID invalid");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error occurred.");
+            return;
+        }
+        
+        // Create order_products entries, and update quantities in inventory
+        for (int i = 0; i < productIDs.length; i++) {
+            int productId = productIDs[i];
+            int quantity = quantities[i];
+            
+            order_products__creationStatement = "INSERT INTO order_products (OrderID, ProductID, ProductQuantity)" +
+                    "VALUES (" + newOrderPrimaryKey + ", " + productId + ", " + quantity + ")";
+            inventory__updateStatement = "UPDATE inventory SET ProductStockAmount = ProductStockAmount - " + quantity +
+                    " WHERE" + "ProductID = " + productId;
+            
+            try {
+                conn.createStatement().executeQuery(other_products__creationStatement);
+            } catch (SQLIntegrityConstraintViolation e) {
+                System.out.println("Product ID (" + productId + ") or quantity (" + quantity + ") invalid");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error occurred");
+                return;
+            }
+            
+            try {
+                conn.createStatement().executeQuery(inventory__updateStatement);
+            } catch (SQLIntegrityConstraintViolation e) {
+                // Shouldn't ever happen, because we checked at the start
+                System.out.println("Insufficient product remains. Database integrity compromised.");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error occurred");
+                return;
+            }
+        }
     }
 
     /**
