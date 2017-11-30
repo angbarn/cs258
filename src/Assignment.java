@@ -677,12 +677,12 @@ class Assignment {
             }
             
             if (currentQuantities[i] < quantity) {
-                System.out.println("Insufficient quantity for product " + productID + ": " + quantity +" requested" +
+                System.out.println("Insufficient quantity for product " + productID + ": " + quantity + " requested " +
                         "but only " + currentQuantities[i] + " remains.");
                 return;
             } else {
                 // Update for when we return stock values at the end
-                currentQuantities[i] = currentQuantities[i] - 1;
+                currentQuantities[i] = currentQuantities[i] - quantity;
             }
         }
         
@@ -710,6 +710,7 @@ class Assignment {
             stmt.executeQuery(orders__creationStatement);
         } catch (SQLIntegrityConstraintViolationException e) {
             System.out.println("Order date invalid");
+            return;
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error occurred.");
@@ -722,6 +723,7 @@ class Assignment {
             stmt.executeQuery(staff_orders__creationStatement);
         } catch (SQLIntegrityConstraintViolationException e) {
             System.out.println("Staff ID invalid");
+            return;
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error occurred.");
@@ -742,6 +744,7 @@ class Assignment {
                 conn.createStatement().executeQuery(order_products__creationStatement);
             } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Product ID (" + productId + ") or quantity (" + quantity + ") invalid");
+                return;
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred");
@@ -754,11 +757,26 @@ class Assignment {
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Shouldn't ever happen, because we checked at the start
                 System.out.println("Insufficient product remains. Database integrity compromised.");
+                return;
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred");
                 return;
             }
+        }
+        
+        // Output new product quantities
+        for (int i = 0; i < productIDs.length; i++) {
+            StringBuilder out = new StringBuilder("Product ID ");
+            out.append(productIDs[i]);
+            out.append(" ");
+            if (i == 0) {
+                out.append("stock ");
+            }
+            out.append("is now at ");
+            out.append(currentQuantities[i]);
+            
+            System.out.println(out.toString());
         }
     }
 
