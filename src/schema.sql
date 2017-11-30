@@ -151,6 +151,7 @@ SELECT s.FName || ' ' || s.LName "Employee Name",
        '£' || NVL(sstv.total, 0) "Total"
 FROM StaffSaleTotalValue sstv
 RIGHT JOIN staff S on s.StaffID = sstv.StaffID
+WHERE sstv.total > 50000
 ORDER BY NVL(sstv.total, 0) DESC;
 
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
@@ -162,4 +163,3 @@ ORDER BY sspq.StaffID;
 
 
 
-WHERE sstv.total > 50000
