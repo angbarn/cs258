@@ -9,3 +9,5 @@ DROP SEQUENCE PK_staff;
 DROP SEQUENCE PK_order;
 DROP SEQUENCE PK_inventory;
 DROP VIEW ProductValueSold;
+DROP VIEW StaffTopSellers;
+DROP VIEW FormattedTopSellers;

@@ -120,3 +120,28 @@ FROM (SELECT ProductID,
 ORDER BY Sold DESC;
 */
 
+-- For option 6
+CREATE VIEW StaffTopSellers AS
+SELECT so.StaffID id, SUM(i.ProductPrice) total FROM staff_orders so
+JOIN order_products op ON op.OrderID = so.OrderID
+JOIN inventory i ON i.ProductID = op.ProductID
+GROUP BY so.StaffID;
+
+CREATE VIEW FormattedTopSellers AS
+SELECT s.FName, s.LName, t.total FROM StaffTopSellers t
+JOIN staff s ON s.StaffID = t.id;
+
+/*
+-- For option 6, but it discounts incomplete orders
+CREATE VIEW StaffTopSellers AS
+SELECT so.StaffID id, SUM(i.ProductPrice) total FROM staff_orders so
+JOIN orders o ON o.OrderID = so.OrderID
+JOIN order_products op ON op.OrderID = so.OrderID
+JOIN inventory i ON i.ProductID = op.ProductID
+WHERE o.OrderCompleted = 1
+GROUP BY so.StaffID;
+
+CREATE VIEW FormattedTopSellers AS
+SELECT s.FName, s.LName, t.total FROM StaffTopSellers t
+JOIN staff s ON s.StaffID = t.id;
+*/
