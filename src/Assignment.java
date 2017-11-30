@@ -664,7 +664,8 @@ class Assignment {
             inventory__checkStatement = "SELECT ProductStockAmount FROM inventory WHERE ProductID = " + productID;
             
             try {
-                ResultSet rs = conn.createStatement().executeQuery();
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(inventory__checkStatement);
                 if (!rs.next()) {
                     System.out.println("Invalid product ID: " + productID);
                 }
@@ -678,6 +679,8 @@ class Assignment {
             if (currentQuantities[i] < quantity) {
                 System.out.println("Insufficient quantity for product " + productID + ": " + quantity +" requested" +
                         "but only " + currentQuantities[i] + " remains.");
+                return;
+            } else {
                 // Update for when we return stock values at the end
                 currentQuantities[i] = currentQuantities[i] - 1;
             }
@@ -733,11 +736,11 @@ class Assignment {
             order_products__creationStatement = "INSERT INTO order_products (OrderID, ProductID, ProductQuantity)" +
                     "VALUES (" + newOrderPrimaryKey + ", " + productId + ", " + quantity + ")";
             inventory__updateStatement = "UPDATE inventory SET ProductStockAmount = ProductStockAmount - " + quantity +
-                    " WHERE" + "ProductID = " + productId;
+                    " WHERE ProductID = " + productId;
             
             try {
-                conn.createStatement().executeQuery(other_products__creationStatement);
-            } catch (SQLIntegrityConstraintViolation e) {
+                conn.createStatement().executeQuery(order_products__creationStatement);
+            } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Product ID (" + productId + ") or quantity (" + quantity + ") invalid");
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -746,8 +749,9 @@ class Assignment {
             }
             
             try {
-                conn.createStatement().executeQuery(inventory__updateStatement);
-            } catch (SQLIntegrityConstraintViolation e) {
+                Statement stmt = conn.createStatement();
+                stmt.executeQuery(inventory__updateStatement);
+            } catch (SQLIntegrityConstraintViolationException e) {
                 // Shouldn't ever happen, because we checked at the start
                 System.out.println("Insufficient product remains. Database integrity compromised.");
             } catch (SQLException e) {
