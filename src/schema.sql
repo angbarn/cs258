@@ -162,6 +162,7 @@ WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value
 ORDER BY sspq.StaffID;
 
 -- Query for option 8
+/*
 SELECT (s.FName || ' ' || s.LName) "Employee Name", value "Total value sold"
 FROM (
     SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s
@@ -194,3 +195,4 @@ WHERE value > 50000 AND
           )
       )
 ;
+*/
