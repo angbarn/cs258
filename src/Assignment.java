@@ -1163,6 +1163,8 @@ class Assignment {
                             break;
                 case 3:     InputHandler.OptionHandler.inputOption3(conn);
                             break;
+                case 4:     option4(conn);
+                            break;
                 case 0:     loop = false;
                             System.out.println("Goodbye.");
                             break;
