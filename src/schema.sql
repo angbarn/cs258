@@ -163,46 +163,7 @@ ORDER BY sspq.StaffID;
 
 -- Query for option 8
 /*
-SELECT (s.FName || ' ' || s.LName) "Employee Name", value "Total value sold"
-FROM (
-    SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s
-    JOIN staff_orders so ON so.StaffID = s.StaffID
-    JOIN orders o ON o.OrderID = so.OrderID
-    JOIN order_products op ON op.OrderID = so.OrderID
-    JOIN inventory i ON i.ProductID = op.ProductID
-    WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND
-          o.OrderPlaced < TO_DATE('01-Jan-2017') + 365
-    GROUP BY s.StaffID
-) sub
-JOIN staff s ON s.StaffID = sub.StaffID
-WHERE value > 50000 AND
-      sub.StaffID IN
-      (
-          SELECT so.StaffID FROM staff_orders so
-          JOIN order_products op ON op.OrderID = so.OrderID
-          JOIN inventory i ON i.ProductID = op.ProductID
-          WHERE i.ProductID IN
-          (
-              SELECT ProductID FROM (
-                  SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) ValueSold
-                  FROM orders o
-                  JOIN order_products op ON op.OrderID = o.OrderID
-                  JOIN inventory i ON i.ProductID = op.ProductID
-                  WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') + 365
-                  GROUP BY i.ProductID
-              ) valid
-              WHERE ValueSold > 20000
-          )
-      )
-;
-*/
-
-
-
-
-
-/*
-SELECT sellers.StaffID, sellers.Value
+SELECT (staff.FName || ' ' || staff.LName) EmployeeName
 FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value
       FROM staff_orders so
       JOIN orders o ON o.OrderID = so.OrderID
@@ -210,8 +171,9 @@ FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value
       JOIN inventory i ON i.ProductID = op.ProductID
       GROUP BY so.StaffID
       ) sellers
+JOIN staff ON staff.StaffID = sellers.StaffID
 WHERE Value > 30000
-  AND (SELECT COUNT(*) FROM (
+  AND (NOT EXISTS (
           (
               SELECT ProductID FROM (
                   SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) val FROM inventory i
@@ -233,6 +195,6 @@ WHERE Value > 30000
                 AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365
                 AND so.StaffID = sellers.StaffID
           )
-      )) = 0
+      ))
 ;
 */

@@ -1142,44 +1142,72 @@ class Assignment {
      */
     public static void option8(Connection conn, int year)
     {
-        String q;
-        String d = "01-Jan-" + year;
+        String dateBoundary = "01-Jan-" + (year + "").substring(2);
 
-        q = ""
-        + "SELECT (s.FName || ' ' || s.LName) \"Employee Name\", value \"Total value sold\"\n"
-        + "FROM (\n"
-            + "SELECT s.StaffID, SUM(op.ProductQuantity * i.ProductPrice) value FROM staff s\n"
-            + "JOIN staff_orders so ON so.StaffID = s.StaffID\n"
-            + "JOIN orders o ON o.OrderID = so.OrderID\n"
-            + "JOIN order_products op ON op.OrderID = so.OrderID\n"
-            + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-            + "WHERE o.OrderPlaced >= TO_DATE('01-Jan-2017') AND\n"
-                  + "o.OrderPlaced < TO_DATE('01-Jan-2017') + 365\n"
-            + "GROUP BY s.StaffID\n"
-        + ") sub\n"
-        + "JOIN staff s ON s.StaffID = sub.StaffID\n"
-        + "WHERE value > 50000 AND\n"
-              + "sub.StaffID IN\n"
-              + "(\n"
-                  + "SELECT so.StaffID FROM staff_orders so\n"
-                  + "JOIN order_products op ON op.OrderID = so.OrderID\n"
-                  + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-                  + "WHERE i.ProductID IN\n"
-                  + "(\n"
-                      + "SELECT ProductID FROM (\n"
-                          + "SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) ValueSold\n"
-                          + "FROM orders o\n"
-                          + "JOIN order_products op ON op.OrderID = o.OrderID\n"
-                          + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-                          + "WHERE o.OrderPlaced >= TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') "
-                                  + "+ 365\n"
-                          + "GROUP BY i.ProductID\n"
-                      + ") valid\n"
-                      + "WHERE ValueSold > 20000\n"
-                  + ")\n"
-              + ")\n"
-        + ";";
+        String rewardsQuery = ""
+                + "SELECT (staff.FName || ' ' || staff.LName) EmployeeName\n"
+                + "FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value\n"
+                      + "FROM staff_orders so\n"
+                      + "JOIN orders o ON o.OrderID = so.OrderID\n"
+                      + "JOIN order_products op ON op.OrderID = so.OrderID\n"
+                      + "JOIN inventory i ON i.ProductID = op.ProductID\n"
+                      + "GROUP BY so.StaffID\n"
+                      + ") sellers\n"
+                + "JOIN staff ON staff.StaffID = sellers.StaffID\n"
+                + "WHERE Value > 30000\n"
+                  + "AND (NOT EXISTS (\n"
+                          + "(\n"
+                              + "SELECT ProductID FROM (\n"
+                                  + "SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) val FROM inventory i\n"
+                                  + "JOIN order_products op ON op.ProductID = i.ProductID\n"
+                                  + "JOIN orders o ON o.OrderID = op.OrderID\n"
+                                  + "WHERE o.OrderPlaced > TO_DATE('01-Jan-17')\n"
+                                    + "AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365\n"
+                                  + "GROUP BY i.ProductID\n"
+                              + ")\n"
+                              + "WHERE val > 20000\n"
+                          + ")\n"
+                          + "MINUS\n"
+                          + "(\n"
+                              + "SELECT DISTINCT op.ProductID\n"
+                              + "FROM staff_orders so\n"
+                              + "JOIN order_products op ON op.OrderID = so.OrderID\n"
+                              + "JOIN orders o ON o.OrderID = op.OrderID\n"
+                              + "WHERE o.OrderPlaced > TO_DATE('01-Jan-17')\n"
+                                + "AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365\n"
+                                + "AND so.StaffID = sellers.StaffID\n"
+                          + ")\n"
+                      + "))\n"
+                + ";";
 
+        try {
+            if (!checkValid(conn, "SELECT TO_DATE('" + dateBoundary + "')")) {
+                System.out.println("Invalid date");
+                return;
+            }
+        }
+
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(rewardsQuery);
+
+            ArrayList<String> headers = new ArrayList<>();
+            headers.add("EmployeeName");
+            Formatting.TabularData table = new Formatting.TabularData(headers);
+
+            while (rs.next()) {
+                ArrayList<String> row = new ArrayList<>();
+                String name = rs.getString("EmployeeName");
+                row.add(name);
+                table.add(row);
+            }
+
+            System.out.println(table.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error when getting reward-ees");
+            return;
+        }
     }
     
     /**
