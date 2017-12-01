@@ -642,6 +642,24 @@ class InputHandler {
         }
 
         /**
+         * Gets user input required for menu option 5, and then performs menu option 5
+         * (Cleanup uncollected collections)
+         * @param conn The connection to the database
+         */
+        public static void inputOption7(Connection conn) {
+            String date;
+
+            try {
+                date = interrogate("Enter the date", datVal);
+            } catch (ClientValidationError e) {
+                System.out.println("Date provided is invalid");
+                return;
+            }
+
+            Assignment.option5(conn, date);
+        }
+
+        /**
          * Gets user input required for menu option 8, and then performs menu option 8
          * (Employee rewards)
          * @param conn The connection to the database
@@ -1155,7 +1173,7 @@ class Assignment {
 
             while (rs.next()) {
                 int productID = rs.getInt("ProductID");
-                out.append("Order " + productID + " has been cancelled");
+                out.append("Order " + productID + " has been cancelled\n");
             }
         } catch (SQLException e) {
             e.printStackTrace();
