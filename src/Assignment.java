@@ -638,6 +638,45 @@ class InputHandler {
     }
 }
 
+class Formatting {
+    public static class TabularData {
+        private ArrayList<String> headers;
+        private ArrayList<Integer> headerWidths;
+        private ArrayList<ArrayList<String>> data;
+        private int columns;
+
+        public TabularData (ArrayList<String> headers) {
+            data = new ArrayList<>();
+            this.headers = headers;
+            columns = headers.size();
+
+            for (int cellIndex = 0; cellIndex < columns; cellIndex++) {
+                headerWidths.set(i, headers.get(i).length());
+            }
+        }
+
+        public void add(ArrayList<String> row) {
+            if (row.size() == columns) {
+                data.add(row);
+                for (int cellIndex = 0; cellIndex < columns; cellIndex++) {
+                    int cellWidth = row.get(cellIndex);
+                    int cellWidthMax = headerWidths.get(cellIndex);
+
+                    if (cellWidth > )
+                }
+            } else {
+                throw new IllegalArgumentException("Invalid row count");
+            }
+        }
+
+        public void add(ArrayList<ArrayList<String>> rows) {
+            for (ArrayList<String> row : rows) {
+                add(row);
+            }
+        }
+    }
+}
+
 class Assignment {
     /**
      * Checks to see if the provided query returns at least one reuslt.
