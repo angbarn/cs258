@@ -1000,7 +1000,7 @@ class Assignment {
                 ArrayList<String> newRow = new ArrayList<>();
                 String id = rs.getString("Product ID");
                 String desc = rs.getString("Product Description");
-                String total = Formatting.CurrencyFormat(rs.getDouble("Total Value Sold"));
+                String total = Formatting.formatCurrency(rs.getDouble("Total Value Sold"));
 
                 newRow.add(id);
                 newRow.add(desc);
