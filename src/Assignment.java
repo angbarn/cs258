@@ -1,6 +1,7 @@
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * Thrown when a user attempts to make an invalid menu selection.
@@ -641,7 +642,6 @@ class InputHandler {
 class Formatting {
     public static class TabularData {
         private ArrayList<String> headers;
-        private ArrayList<Integer> headerWidths;
         private ArrayList<ArrayList<String>> data;
         private int columns;
 
@@ -649,30 +649,55 @@ class Formatting {
             data = new ArrayList<>();
             this.headers = headers;
             columns = headers.size();
-
-            for (int cellIndex = 0; cellIndex < columns; cellIndex++) {
-                headerWidths.set(i, headers.get(i).length());
-            }
         }
 
         public void add(ArrayList<String> row) {
             if (row.size() == columns) {
+                // Add data to table
                 data.add(row);
-                for (int cellIndex = 0; cellIndex < columns; cellIndex++) {
-                    int cellWidth = row.get(cellIndex);
-                    int cellWidthMax = headerWidths.get(cellIndex);
-
-                    if (cellWidth > )
-                }
             } else {
+                // Enforce dimensions
                 throw new IllegalArgumentException("Invalid row count");
             }
         }
 
-        public void add(ArrayList<ArrayList<String>> rows) {
+        public void addRows(ArrayList<ArrayList<String>> rows) {
             for (ArrayList<String> row : rows) {
                 add(row);
             }
+        }
+
+        private String getTable() {
+            StringBuilder tableOut = new StringBuilder();
+
+            tableOut.append(getRow(headers));
+
+            Iterator<ArrayList<String>> i = data.iterator();
+            while (i.hasNext()) {
+                String currentRow = getRow(i.next());
+                tableOut.append(currentRow);
+                if (i.hasNext()) {
+                    tableOut.append("\n");
+                }
+            }
+
+            return (tableOut.toString());
+        }
+
+        private String getRow(ArrayList<String> row) {
+            StringBuilder rowOut = new StringBuilder();
+            Iterator<String> i = row.iterator();
+            while (i.hasNext()) {
+                rowOut.append(i.next());
+                if (i.hasNext()) {
+                    rowOut.append(", ");
+                }
+            }
+            return (rowOut.toString());
+        }
+
+        public String toString() {
+            return (getTable());
         }
     }
 }
@@ -925,12 +950,12 @@ class Assignment {
 
         if (orderPrimaryKey != -1) {
             deliveries__creation_statement = "INSERT INTO deliveries (OrderID, FName, LName, DeliveryDate, House, " +
-                    "Street, City) VALUES (" + orderPrimaryKey + ", " + fName + ", " + lName + ", '" + deliveryDate + 
+                    "Street, City) VALUES (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + deliveryDate + 
                     "', '" + house + "', '" + street + "', '" + city + "')";
             
             try {
                 Statement stmt = conn.createStatement();
-                stmt.executeQuery(collections__creationStatement);
+                stmt.executeQuery(deliveries__creation_statement);
             } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Delivery date was invalid");
             } catch (SQLException e) {
@@ -945,7 +970,6 @@ class Assignment {
      */
     public static void option4(Connection conn)
     {
-        // Incomplete - Code for option 4 goes here
     }
 
     /**
