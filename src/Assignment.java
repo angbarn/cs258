@@ -1140,7 +1140,7 @@ class Assignment {
                 + "JOIN order_products op ON op.OrderID = c.OrderID\n"
                 + "WHERE c.CollectionDate > TO_DATE('" + date + "') + 8 AND o.OrderCompleted = 0";
 
-        String cleanupQuery = ""
+        String cleanupScript = ""
                 + "BEGIN\n"
                 + "FOR record IN (" + outputQuery + ")\n"
                 + "LOOP\n"
@@ -1152,8 +1152,7 @@ class Assignment {
                     + "SET ProductStockAmount = ProductStockAmount + record.ProductQuantity\n"
                     + "WHERE ProductID = record.ProductID;\n"
                 + "END LOOP;\n"
-                + "END;\n"
-                + "/";
+                + "END;\n";
 
         try {
             checkValid(conn, "SELECT TO_DATE('" + date + "') FROM dual");
@@ -1169,7 +1168,7 @@ class Assignment {
             Statement cleanup = conn.createStatement();
 
             ResultSet rs =  results.executeQuery(outputQuery);
-            cleanup.executeQuery(cleanupQuery);
+            cleanup.execute(cleanupScript);
 
             while (rs.next()) {
                 int productID = rs.getInt("ProductID");
