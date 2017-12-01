@@ -1328,7 +1328,7 @@ class Assignment {
                             break;
                 case 7:     option7(conn);
                             break;
-                case 8:     // TODO
+                case 8:     InputHandler.OptionHandler.inputOption8(conn);
                             break;
                 case 0:     loop = false;
                             System.out.println("Goodbye.");
