@@ -673,8 +673,9 @@ class InputHandler {
                 return;
             }
 
-            if (year < 2000 || year >= 2100) {
-                System.out.println("Year must be in the 21st Century");
+            if (year < 1950 || year >= 2050) {
+                // Sqlplus considers all dates from 01-Jan-51 to 31-Dec-99 to be in the 1900s
+                System.out.println("Year must between 1950 and 2050");
             } else {
                 Assignment.option8(conn, year);
             }
