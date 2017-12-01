@@ -664,24 +664,58 @@ class InputHandler {
     }
 }
 
+/**
+ * Class to handle various formatting tasks throughout the program
+ */
 class Formatting {
+    /**
+     * Formats currency as GBP
+     * @param currency What we want formatted as currency
+     * @return A string in the format of currency, e.g., £7.50
+     */
     public static String formatCurrency(double currency) {
         Locale locale = new Locale("en", "GB");
         NumberFormat formatter = NumberFormat.getCurrencyInstance(locale);
         return (formatter.format(currency));
     }
 
+    /**
+     * Handles converting data into CSV outputs.
+     * Works by passing ArrayLists of String objects to serve as the rows and cells of the table, respectively.
+     * Headers are counted separately from rows.
+     * Column size is enforced based on the dimensions of the header row
+     */
     public static class TabularData {
+        /**
+         * Header row of the table
+         */
         private ArrayList<String> headers;
+        /**
+         * Various rows of the table - must be of the same length as the headers
+         */
         private ArrayList<ArrayList<String>> data;
+        /**
+         * Explicitly maintain column count - used to enforce cell count in new rows
+         */        
         private int columns;
 
+        /**
+         * A table must be created with headers.
+         * Set up the number of columns, and create a new, empty array for rows
+         * @param headers The headers of the table
+         */
         public TabularData (ArrayList<String> headers) {
             data = new ArrayList<>();
             this.headers = headers;
             columns = headers.size();
         }
 
+        /**
+         * Add a new row to the table
+         * @param row The new row to add to the table
+         * @throws IllegalArgumentException If the number of cells in the new row is incorect (based on the number of
+         *         cells in the header row.)
+         */
         public void add(ArrayList<String> row) {
             if (row.size() == columns) {
                 // Add data to table
@@ -692,16 +726,30 @@ class Formatting {
             }
         }
 
-        public void addRows(ArrayList<ArrayList<String>> rows) {
+        /**
+         * Adds a series of rows to the table, provided by an Iterable of ArrayLists.
+         * @param rows A series of rows to add to the table
+         * @throws IllegalArgumentException If any rows do not satisfy column count requirements. All rows added prior
+         *                                  to exception throwing will remain in the table.
+         */
+        public void addRows(Iterable<ArrayList<String>> rows) {
             for (ArrayList<String> row : rows) {
                 add(row);
             }
         }
 
-        public int getRows() {
+        /**
+         * Gets the number of rows in the table, not including the headers
+         * @return The number of rows in the table, not including the headers
+         */
+        public int getRowCount() {
             return (data.size());
         }
 
+        /**
+         * Converts the table's data and headers to a CSV
+         * @return The table's headers and data converted to a CSV
+         */
         private String getTable() {
             StringBuilder tableOut = new StringBuilder();
 
@@ -720,6 +768,10 @@ class Formatting {
             return (tableOut.toString());
         }
 
+        /**
+         * Converts a given row of the table to a line of CSV
+         * @return The given row, converted to a line of CSV
+         */
         private String getRow(ArrayList<String> row) {
             StringBuilder rowOut = new StringBuilder();
             Iterator<String> i = row.iterator();
@@ -732,6 +784,10 @@ class Formatting {
             return (rowOut.toString());
         }
 
+        /**
+         * Coverts the entire table to a CSV string, headers and all
+         * @return The entire table converted to a CSV string
+         */
         public String toString() {
             return (getTable());
         }
@@ -793,6 +849,7 @@ class Assignment {
             int quantity = quantities[i];
             inventory__checkStatement = "SELECT ProductStockAmount FROM inventory WHERE ProductID = " + productID;
             
+            // Load currently remaining stock for each item from the database
             try {
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(inventory__checkStatement);
@@ -807,6 +864,7 @@ class Assignment {
                 return (-1);
             }
             
+            // Ensure the remaining stock is sufficient for the order to complete
             if (currentQuantities[i] < quantity) {
                 System.out.println("Insufficient quantity for product " + productID + ": " + quantity + " requested " +
                         "but only " + currentQuantities[i] + " remains.");
@@ -872,6 +930,7 @@ class Assignment {
             inventory__updateStatement = "UPDATE inventory SET ProductStockAmount = ProductStockAmount - " + quantity +
                     " WHERE ProductID = " + productId;
             
+            // Create the order
             try {
                 conn.createStatement().executeQuery(order_products__creationStatement);
             } catch (SQLIntegrityConstraintViolationException e) {
@@ -883,6 +942,7 @@ class Assignment {
                 return (-1);
             }
             
+            // Update inventory stock levels
             try {
                 Statement stmt = conn.createStatement();
                 stmt.executeQuery(inventory__updateStatement);
@@ -944,12 +1004,15 @@ class Assignment {
         String collections__creationStatement;
         int orderPrimaryKey;
 
+        // Fulfill standard order tasks
         orderPrimaryKey = standardOrder(conn, productIDs, quantities, orderDate, staffID, "Collection", 0);
 
+        // If success, insert entry into collections table
         if (orderPrimaryKey != -1) {
             collections__creationStatement = "INSERT INTO collections (OrderID, FName, LName, CollectionDate) VALUES" +
                     " (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + collectionDate + "')";
 
+            // Make the insertion
             try {
                 Statement stmt = conn.createStatement();
                 stmt.executeQuery(collections__creationStatement);
@@ -982,13 +1045,16 @@ class Assignment {
         String deliveries__creation_statement;
         int orderPrimaryKey;
 
+        // Fulfill standard order tasks
         orderPrimaryKey = standardOrder(conn, productIDs, quantities, orderDate, staffID, "Delivery", 0);
 
+        // If success, insert entry into deliveries table
         if (orderPrimaryKey != -1) {
             deliveries__creation_statement = "INSERT INTO deliveries (OrderID, FName, LName, DeliveryDate, House, " +
                     "Street, City) VALUES (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + deliveryDate + 
                     "', '" + house + "', '" + street + "', '" + city + "')";
             
+            // Make the insertion
             try {
                 Statement stmt = conn.createStatement();
                 stmt.executeQuery(deliveries__creation_statement);
@@ -1015,11 +1081,13 @@ class Assignment {
 
         Formatting.TabularData table = new Formatting.TabularData(headers);
 
+        // Load data from database
         try {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(biggestSellers);
 
             while (rs.next()) {
+                // Construct new row from current row of returned data
                 ArrayList<String> newRow = new ArrayList<>();
                 String id = rs.getString("ProductID");
                 String desc = rs.getString("ProductDesc");
@@ -1029,6 +1097,7 @@ class Assignment {
                 newRow.add(desc);
                 newRow.add(total);
 
+                // Add newly constructed row to table
                 table.add(newRow);
             }
         } catch (SQLException e) {
@@ -1036,6 +1105,7 @@ class Assignment {
             System.out.println("Error in application");
         }
 
+        // Output the CSV
         System.out.println(table.toString());
     }
 
@@ -1061,11 +1131,13 @@ class Assignment {
 
         Formatting.TabularData table = new Formatting.TabularData(headers);
 
+        // Load data from database
         try {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(topSellersQuery);
 
             while (rs.next()) {
+                // Construct new row of table from current row of returned data
                 ArrayList<String> newRow = new ArrayList<>();
                 String name = rs.getString("EmployeeName");
                 String value = Formatting.formatCurrency(rs.getDouble("TotalValueSold"));
@@ -1073,6 +1145,7 @@ class Assignment {
                 newRow.add(name);
                 newRow.add(value);
 
+                // Add newly constructed row to table
                 table.add(newRow);
             }
         } catch (SQLException e) {
@@ -1081,6 +1154,7 @@ class Assignment {
             return;
         }
 
+        // Output the CSV
         System.out.println(table.toString());
     }
 
@@ -1089,8 +1163,12 @@ class Assignment {
      */
     public static void option7(Connection conn)
     {
+        // Gets a list of all sales of all top selling products by all staff
         String topSellerSalesQuery = "SELECT * FROM TopSellerSalesByStaff";
+        // Effectively a 2D hash map - Indexed by employee name, then by the product ID
+        // The value stored is the quantity of the given item they sold
         HashMap<String, HashMap<Integer, Integer>> salesRecord = new HashMap<>();
+        // The hash set is used to ensure values are printed for all items for all staff, even if they didn't sell any
         HashSet<Integer> allProductIDs = new HashSet<>();
 
         try {
@@ -1127,33 +1205,40 @@ class Assignment {
             return;
         }
 
+        // Construct table and headers
         ArrayList<String> headers = new ArrayList<>();
         headers.add("EmployeeName");
         for (int id : allProductIDs) {
             headers.add("Product " + id);
         }
-
         Formatting.TabularData table = new Formatting.TabularData(headers);
 
+        // Construct rows of CSV table
         for (String employeeName : salesRecord.keySet()) {
             ArrayList<String> newRow = new ArrayList<>();
+            // Get the entry in the sales records that corresponds to this employee
             HashMap<Integer, Integer> employeeRow = salesRecord.get(employeeName);
             newRow.add(employeeName);
             
             for (int id : allProductIDs) {
                 String quantity;
+                // For every top selling item (given by the set), find the number of items this employee sold
                 if (employeeRow.containsKey(id)) {
                     quantity = employeeRow.get(id).toString();
                 } else {
+                    // Absence is taken as 0 sold
                     quantity = "0";
                 }
 
+                // Add to row
                 newRow.add(quantity);
             }
 
+            // Add row to table
             table.add(newRow);
         }
 
+        // Output table
         System.out.println(table.toString());
     }
 
@@ -1166,6 +1251,7 @@ class Assignment {
         String dateBoundary = "01-Jan-" + (year + "").substring(2);
 
         String rewardsQuery = ""
+                // Select all staff members who've sold more than 30000 worth of anything in the given year
                 + "SELECT (staff.FName || ' ' || staff.LName) EmployeeName\n"
                 + "FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value\n"
                       + "FROM staff_orders so\n"
@@ -1176,8 +1262,11 @@ class Assignment {
                       + ") sellers\n"
                 + "JOIN staff ON staff.StaffID = sellers.StaffID\n"
                 + "WHERE Value > 30000\n"
+                  // Make sure nothing is left when subtracting the set of all products the staff member has sold from
+                  // the set of all products which have sold more than 20000 in the given year
                   + "AND (NOT EXISTS (\n"
                           + "(\n"
+                              // Get a list of all the product IDs which have sold > 20000 in the given year
                               + "SELECT ProductID FROM (\n"
                                   + "SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) val FROM inventory i\n"
                                   + "JOIN order_products op ON op.ProductID = i.ProductID\n"
@@ -1189,6 +1278,7 @@ class Assignment {
                               + "WHERE val > 20000\n"
                           + ")\n"
                           + "MINUS\n"
+                          // Get a list of all products the staff member has sold in the given year
                           + "(\n"
                               + "SELECT DISTINCT op.ProductID\n"
                               + "FROM staff_orders so\n"
@@ -1200,6 +1290,7 @@ class Assignment {
                           + ")\n"
                       + "))\n";
 
+        // Ensure provided date is valid
         try {
             if (!checkValid(conn, "SELECT TO_DATE('" + dateBoundary + "') FROM dual")) {
                 System.out.println("Invalid date");
@@ -1211,6 +1302,7 @@ class Assignment {
             return;
         }
 
+        // Run query and load results
         try {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(rewardsQuery);
@@ -1219,6 +1311,7 @@ class Assignment {
             headers.add("EmployeeName");
             Formatting.TabularData table = new Formatting.TabularData(headers);
 
+            // Load results into table
             while (rs.next()) {
                 ArrayList<String> row = new ArrayList<>();
                 String name = rs.getString("EmployeeName");
@@ -1226,6 +1319,7 @@ class Assignment {
                 table.add(row);
             }
 
+            // Output table results
             System.out.println(table.toString());
         } catch (SQLException e) {
             e.printStackTrace();
