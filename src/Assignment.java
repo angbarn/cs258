@@ -1030,7 +1030,7 @@ class Assignment {
      */
     public static void option6(Connection conn)
     {
-        String topSellersQuery = "SELECT * FROM FormattedTopSollers";
+        String topSellersQuery = "SELECT * FROM FormattedTopSellers";
 
         ArrayList<String> headers = new ArrayList<>();
         headers.add("EmployeeName");
