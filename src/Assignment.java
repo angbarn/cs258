@@ -998,9 +998,9 @@ class Assignment {
 
             while (rs.next()) {
                 ArrayList<String> newRow = new ArrayList<>();
-                String id = rs.getString("Product ID");
-                String desc = rs.getString("Product Description");
-                String total = Formatting.formatCurrency(rs.getDouble("Total Value Sold"));
+                String id = rs.getString("ProductID");
+                String desc = rs.getString("ProductDesc");
+                String total = Formatting.formatCurrency(rs.getDouble("Value"));
 
                 newRow.add(id);
                 newRow.add(desc);
