@@ -113,7 +113,7 @@ SELECT pqs.id, (pqs.quantity * i.ProductPrice) value FROM ProductQuantitySold pq
 JOIN inventory i ON i.ProductID = pqs.id;
 
 -- Format the results of ProductValueSold (Option 4)
-CREATE VIEW FormattedValueSold AS 
+CREATE VIEW FormattedValueSold AS
 SELECT i.ProductID ProductID,
        i.ProductDesc ProductDesc,
        NVL(pvs.value, 0) Value
@@ -194,5 +194,45 @@ WHERE value > 50000 AND
               WHERE ValueSold > 20000
           )
       )
+;
+*/
+
+
+
+
+
+/*
+SELECT sellers.StaffID, sellers.Value
+FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value
+      FROM staff_orders so
+      JOIN orders o ON o.OrderID = so.OrderID
+      JOIN order_products op ON op.OrderID = so.OrderID
+      JOIN inventory i ON i.ProductID = op.ProductID
+      GROUP BY so.StaffID
+      ) sellers
+WHERE Value > 30000
+  AND (SELECT COUNT(*) FROM (
+          (
+              SELECT ProductID FROM (
+                  SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) val FROM inventory i
+                  JOIN order_products op ON op.ProductID = i.ProductID
+                  JOIN orders o ON o.OrderID = op.OrderID
+                  WHERE o.OrderPlaced > TO_DATE('01-Jan-17')
+                    AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365
+                  GROUP BY i.ProductID
+              )
+              WHERE val > 20000
+          )
+          MINUS
+          (
+              SELECT DISTINCT op.ProductID
+              FROM staff_orders so
+              JOIN order_products op ON op.OrderID = so.OrderID
+              JOIN orders o ON o.OrderID = op.OrderID
+              WHERE o.OrderPlaced > TO_DATE('01-Jan-17')
+                AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365
+                AND so.StaffID = sellers.StaffID
+          )
+      )) = 0
 ;
 */
