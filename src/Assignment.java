@@ -971,21 +971,34 @@ class Assignment {
     public static void option4(Connection conn)
     {
         String biggestSellers = "SELECT * FROM FormattedValueSold";
-        Formatting.TabularData table = new Formatting.TabularData("ProductID", "ProductDesc", "TotalValueSold");
 
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(biggestSellers);
+        ArrayList<String> headers = new ArrayList<String>();
+        headers.add("ProductID");
+        headers.add("ProductDesc");
+        headers.add("TotalValueSold");
 
-        while (rs.next()) {
-            ArrayList<String> newRow = new ArrayList<>();
-            String id = rs.getString("Product ID");
-            String desc = rs.getString("Product Description");
-            String total = rs.getString("Total Value Sold");
+        Formatting.TabularData table = new Formatting.TabularData(headers);
 
-            newRow.add(id);
-            newRow.add(desc);
-            newRow.add(total);
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(biggestSellers);
+
+            while (rs.next()) {
+                ArrayList<String> newRow = new ArrayList<>();
+                String id = rs.getString("Product ID");
+                String desc = rs.getString("Product Description");
+                String total = rs.getString("Total Value Sold");
+
+                newRow.add(id);
+                newRow.add(desc);
+                newRow.add(total);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in application");
         }
+
+        System.out.println(table.toString());
     }
 
     /**
