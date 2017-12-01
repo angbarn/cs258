@@ -2,6 +2,8 @@ import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Locale;
+import java.text.NumberFormat;
 
 /**
  * Thrown when a user attempts to make an invalid menu selection.
@@ -640,6 +642,12 @@ class InputHandler {
 }
 
 class Formatting {
+    public static String formatCurrency(double currency) {
+        Locale locale = new Locale("en", "GB");
+        NumberFormat formatter = NumberFormat.getCurrencyInstance(locale);
+        return (formatter.format(currency));
+    }
+
     public static class TabularData {
         private ArrayList<String> headers;
         private ArrayList<ArrayList<String>> data;
@@ -992,7 +1000,7 @@ class Assignment {
                 ArrayList<String> newRow = new ArrayList<>();
                 String id = rs.getString("Product ID");
                 String desc = rs.getString("Product Description");
-                String total = rs.getString("Total Value Sold");
+                String total = Formatting.CurrencyFormat(rs.getDouble("Total Value Sold"));
 
                 newRow.add(id);
                 newRow.add(desc);
