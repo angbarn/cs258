@@ -65,8 +65,8 @@ CREATE TABLE deliveries (
     CONSTRAINT NonEmptyDeliveryFName CHECK (LENGTH(FName) > 0),
     CONSTRAINT NonEmptyDeliveryLName CHECK (LENGTH(LName) > 0),
     CONSTRAINT NonEmptyDeliveryHouse CHECK (LENGTH(House) > 0),
-    CONSTRAINT NonEmptyDeliveryStreet CHECK (LENGTH(Street) > 0)
-    CONSTRAINT NonEmptyDeliveryStreet CHECK (LENGTH(City) > 0)
+    CONSTRAINT NonEmptyDeliveryStreet CHECK (LENGTH(Street) > 0),
+    CONSTRAINT NonEmptyDeliveryCity CHECK (LENGTH(City) > 0)
 );
 
 CREATE TABLE collections (
