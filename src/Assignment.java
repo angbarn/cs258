@@ -877,9 +877,28 @@ class Assignment {
      * @param staffID The id of the staff member who sold the order
      */
     public static void option3(Connection conn, int[] productIDs, int[] quantities, String orderDate,
-            String deliveryDate, String fName, String LName, String house, String street, String city, int staffID)
+            String deliveryDate, String fName, String lName, String house, String street, String city, int staffID)
     {
-        // Incomplete - Code for option 3 goes here
+        String deliveries__creation_statement;
+        int orderPrimaryKey;
+
+        orderPrimaryKey = standardOrder(conn, productIDs, quantities, orderDate, staffID, "Delivery", 0);
+
+        if (orderPrimaryKey != -1) {
+            deliveries__creation_statement = "INSERT INTO deliveries (OrderID, FName, LName, DeliveryDate, House, " +
+                    "Street, City) VALUES (" + orderPrimaryKey + ", " + fName + ", " + lName + ", '" + deliveryDate + 
+                    "', '" + house + "', '" + street + "', '" + city + "')";
+            
+            try {
+                Statement stmt = conn.createStatement();
+                stmt.executeQuery(collections__creationStatement);
+            } catch (SQLIntegrityConstraintViolationException e) {
+                System.out.println("Delivery date was invalid");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                System.out.println("Error occurred.");
+            }
+        }
     }
 
     /**
