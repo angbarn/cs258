@@ -646,7 +646,7 @@ class InputHandler {
          * (Cleanup uncollected collections)
          * @param conn The connection to the database
          */
-        public static void inputOption7(Connection conn) {
+        public static void inputOption5(Connection conn) {
             String date;
 
             try {
@@ -1487,7 +1487,7 @@ class Assignment {
                             break;
                 case 4:     option4(conn);
                             break;
-                case 5:     // TODO
+                case 5:     InputHandler.OptionHandler.inputOption5(conn);
                             break;
                 case 6:     option6(conn);
                             break;
