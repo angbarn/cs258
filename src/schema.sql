@@ -119,7 +119,7 @@ SELECT i.ProductID ProductID,
        NVL(pvs.value, 0) Value
 FROM ProductValueSold pvs
 JOIN inventory i ON i.ProductID = pvs.id
-ORDER BY "Total Value Sold" DESC;
+ORDER BY Value DESC;
 
 -- Package together staff members by instances of products they've sold
 CREATE VIEW StaffOrderData AS
