@@ -1030,7 +1030,34 @@ class Assignment {
      */
     public static void option6(Connection conn)
     {
-        // Incomplete - Code for option 6 goes here
+        String topSellersQuery = "SELECT * FROM FormattedTopSollers";
+
+        ArrayList<String> headers = new ArrayList<>();
+        headers.add("EmployeeName");
+        headers.add("TotalValueSold");
+
+        Formatting.TabularData table = new Formatting.TabularData(headers);
+
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(topSellersQuery);
+
+            while (rs.next()) {
+                ArrayList<String> newRow = new ArrayList<>();
+                String name = rs.getString("EmployeeName");
+                String value = Formatting.formatCurrency(rs.getDouble("TotalValueSold"));
+
+                newRow.add(name);
+                newRow.add(value);
+
+                table.add(newRow);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in application");
+        }
+
+        System.out.println(table.toString());
     }
 
     /**
@@ -1099,7 +1126,7 @@ class Assignment {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
         } catch (ClassNotFoundException x) {
-            System.out.println ("Driver could not be loaded");
+            System.out.println("Driver could not be loaded");
         }
 
         conn = null;
@@ -1179,6 +1206,14 @@ class Assignment {
                 case 3:     InputHandler.OptionHandler.inputOption3(conn);
                             break;
                 case 4:     option4(conn);
+                            break;
+                case 5:     // TODO
+                            break;
+                case 6:     option6(conn);
+                            break;
+                case 7:     option7(conn);
+                            break;
+                case 8:     // TODO
                             break;
                 case 0:     loop = false;
                             System.out.println("Goodbye.");
