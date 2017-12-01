@@ -647,12 +647,18 @@ class InputHandler {
          * @param conn The connection to the database
          */
         public static void inputOption8(Connection conn) {
-            int year = interrogateNumeric("Enter the year (YYYY)", numVal);
+            int year;
+            try {
+                year = interrogateNumeric("Enter the year (YYYY)", numVal);
+            } catch (ClientValidationError e) {
+                System.out.println("Year provided is invalid");
+                return;
+            }
 
             if (year < 2000 || year >= 2100) {
                 System.out.println("Year must be in the 21st Century");
             } else {
-                option8(conn, year);
+                Assignment.option8(conn, year);
             }
         }
     }
@@ -1192,11 +1198,10 @@ class Assignment {
                                 + "AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365\n"
                                 + "AND so.StaffID = sellers.StaffID\n"
                           + ")\n"
-                      + "))\n"
-                + ";";
+                      + "))\n";
 
         try {
-            if (!checkValid(conn, "SELECT TO_DATE('" + dateBoundary + "')")) {
+            if (!checkValid(conn, "SELECT TO_DATE('" + dateBoundary + "') FROM dual")) {
                 System.out.println("Invalid date");
                 return;
             }
