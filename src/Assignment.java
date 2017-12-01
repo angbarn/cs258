@@ -667,10 +667,15 @@ class Formatting {
             }
         }
 
+        public int getRows() {
+            return (data.size());
+        }
+
         private String getTable() {
             StringBuilder tableOut = new StringBuilder();
 
             tableOut.append(getRow(headers));
+            tableOut.append("\n");
 
             Iterator<ArrayList<String>> i = data.iterator();
             while (i.hasNext()) {
