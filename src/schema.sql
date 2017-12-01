@@ -130,7 +130,8 @@ JOIN order_products op ON op.orderID = so.OrderID;
 -- Group sales of the same product together
 CREATE VIEW StaffSaleProductQuantity AS
 SELECT sod.StaffID, sod.ProductID, SUM(sod.ProductQuantity) quant FROM StaffOrderData sod
-WHERE (SELECT OrderCompleted FROM orders WHERE OrderID = sod.OrderID) = 1
+    -- Only used if incomplete orders don't count, but they do
+    -- WHERE (SELECT OrderCompleted FROM orders WHERE OrderID = sod.OrderID) = 1
 GROUP BY sod.StaffID, sod.ProductID
 ORDER BY sod.StaffID;
 
@@ -160,41 +161,3 @@ SELECT s.FName || ' ' || s.LName EmployeeName, sspq.ProductID, sspq.quant FROM S
 JOIN staff s ON sspq.StaffID = s.StaffID
 WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
 ORDER BY sspq.StaffID;
-
--- Query for option 8
-/*
-SELECT (staff.FName || ' ' || staff.LName) EmployeeName
-FROM (SELECT so.StaffID, SUM(i.ProductPrice * op.ProductQuantity) Value
-      FROM staff_orders so
-      JOIN orders o ON o.OrderID = so.OrderID
-      JOIN order_products op ON op.OrderID = so.OrderID
-      JOIN inventory i ON i.ProductID = op.ProductID
-      GROUP BY so.StaffID
-      ) sellers
-JOIN staff ON staff.StaffID = sellers.StaffID
-WHERE Value > 30000
-  AND (NOT EXISTS (
-          (
-              SELECT ProductID FROM (
-                  SELECT i.ProductID, SUM(i.ProductPrice * op.ProductQuantity) val FROM inventory i
-                  JOIN order_products op ON op.ProductID = i.ProductID
-                  JOIN orders o ON o.OrderID = op.OrderID
-                  WHERE o.OrderPlaced > TO_DATE('01-Jan-17')
-                    AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365
-                  GROUP BY i.ProductID
-              )
-              WHERE val > 20000
-          )
-          MINUS
-          (
-              SELECT DISTINCT op.ProductID
-              FROM staff_orders so
-              JOIN order_products op ON op.OrderID = so.OrderID
-              JOIN orders o ON o.OrderID = op.OrderID
-              WHERE o.OrderPlaced > TO_DATE('01-Jan-17')
-                AND o.OrderPlaced < TO_DATE('01-Jan-17') + 365
-                AND so.StaffID = sellers.StaffID
-          )
-      ))
-;
-*/
