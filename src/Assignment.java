@@ -640,6 +640,21 @@ class InputHandler {
              Assignment.option3(conn, productIds, quantities, orderDate, deliveryDate, fName, lName, house, street,
                      city, staffId);
         }
+
+        /**
+         * Gets user input required for menu option 8, and then performs menu option 8
+         * (Employee rewards)
+         * @param conn The connection to the database
+         */
+        public static void inputOption8(Connection conn) {
+            int year = interrogateNumeric("Enter the year (YYYY)", numVal);
+
+            if (year < 2000 || year >= 2100) {
+                System.out.println("Year must be in the 21st Century");
+            } else {
+                option8(conn, year);
+            }
+        }
     }
 }
 
