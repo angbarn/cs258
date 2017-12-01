@@ -992,6 +992,8 @@ class Assignment {
                 newRow.add(id);
                 newRow.add(desc);
                 newRow.add(total);
+
+                table.add(newRow);
             }
         } catch (SQLException e) {
             e.printStackTrace();
