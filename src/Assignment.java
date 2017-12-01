@@ -1185,6 +1185,10 @@ class Assignment {
                 System.out.println("Invalid date");
                 return;
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error executing date check");
+            return;
         }
 
         try {
