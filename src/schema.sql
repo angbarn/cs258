@@ -114,9 +114,9 @@ JOIN inventory i ON i.ProductID = pqs.id;
 
 -- Format the results of ProductValueSold (Option 4)
 CREATE VIEW FormattedValueSold AS 
-SELECT i.ProductID "Product ID",
-       i.ProductDesc "Product Description",
-       ('£' || NVL(pvs.value, 0)) "Total Value Sold"
+SELECT i.ProductID ProductID,
+       i.ProductDesc ProductDesc,
+       NVL(pvs.value, 0) Value
 FROM ProductValueSold pvs
 JOIN inventory i ON i.ProductID = pvs.id
 ORDER BY "Total Value Sold" DESC;
