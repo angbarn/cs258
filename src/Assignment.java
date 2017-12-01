@@ -1,6 +1,8 @@
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.text.NumberFormat;
@@ -1055,6 +1057,7 @@ class Assignment {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error in application");
+            return;
         }
 
         System.out.println(table.toString());
@@ -1065,7 +1068,71 @@ class Assignment {
      */
     public static void option7(Connection conn)
     {
-        // Incomplete - Code for option 7 goes here
+        String topSellerSalesQuery = "SELECT * FROM TopSellerSalesByStaff";
+        HashMap<String, HashMap<Integer, Integer>> salesRecord = new HashMap<>();
+        HashSet<Integer> allProductIDs = new HashSet<>();
+
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(topSellerSalesQuery);
+
+            while (rs.next()) {
+                HashMap<Integer, Integer> staffSales;
+
+                String employee = rs.getString("EmployeeName");
+                int productID = rs.getInt("ProductID");
+                int quantity = rs.getInt("Quant");
+
+                // Make sure product is in hash set
+                allProductIDs.add(productID);
+
+                // Make sure staff member is in hashmap
+                if (!salesRecord.containsKey(employee)) {
+                    staffSales = new HashMap<>();
+                    salesRecord.put(employee, staffSales);
+                } else {
+                    staffSales = salesRecord.get(employee);
+                }
+
+                // Add to old quantity if already present
+                if (staffSales.containsKey(productID)) {
+                    quantity = quantity + staffSales.get(productID);
+                }
+                staffSales.put(productID, quantity);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error in application");
+            return;
+        }
+
+        ArrayList<String> headers = new ArrayList<>();
+        headers.add("EmployeeName");
+        for (int id : allProductIDs) {
+            headers.add("Product " + id);
+        }
+
+        Formatting.TabularData table = new Formatting.TabularData(headers);
+
+        for (String employeeName : salesRecord.keySet()) {
+            ArrayList<String> newRow = new ArrayList<>();
+            HashMap<Integer, Integer> employeeRow = salesRecord.get(employeeName);
+            
+            for (int id : allProductIDs) {
+                String quantity;
+                if (employeeRow.containsKey(id)) {
+                    quantity = employeeRow.get(id).toString();
+                } else {
+                    quantity = "0";
+                }
+
+                newRow.add(quantity);
+            }
+
+            table.add(newRow);
+        }
+
+        System.out.println(table.toString());
     }
 
     /**
@@ -1085,7 +1152,7 @@ class Assignment {
             + "JOIN orders o ON o.OrderID = so.OrderID\n"
             + "JOIN order_products op ON op.OrderID = so.OrderID\n"
             + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-            + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND\n"
+            + "WHERE o.OrderPlaced >= TO_DATE('01-Jan-2017') AND\n"
                   + "o.OrderPlaced < TO_DATE('01-Jan-2017') + 365\n"
             + "GROUP BY s.StaffID\n"
         + ") sub\n"
@@ -1103,7 +1170,7 @@ class Assignment {
                           + "FROM orders o\n"
                           + "JOIN order_products op ON op.OrderID = o.OrderID\n"
                           + "JOIN inventory i ON i.ProductID = op.ProductID\n"
-                          + "WHERE o.OrderPlaced > TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') "
+                          + "WHERE o.OrderPlaced >= TO_DATE('01-Jan-2017') AND o.OrderPlaced < TO_DATE('01-Jan-2017') "
                                   + "+ 365\n"
                           + "GROUP BY i.ProductID\n"
                       + ") valid\n"
