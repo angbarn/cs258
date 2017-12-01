@@ -1117,6 +1117,7 @@ class Assignment {
         for (String employeeName : salesRecord.keySet()) {
             ArrayList<String> newRow = new ArrayList<>();
             HashMap<Integer, Integer> employeeRow = salesRecord.get(employeeName);
+            newRow.add(employeeName);
             
             for (int id : allProductIDs) {
                 String quantity;
