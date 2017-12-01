@@ -1115,7 +1115,55 @@ class Assignment {
      */
     public static void option5(Connection conn, String date)
     {
-        // Incomplete - Code for option 5 goes here
+        String outputQuery = ""
+                + "SELECT op.ProductID, op.OrderID, op.ProductQuantity\n"
+                + "FROM collections c\n"
+                + "JOIN orders o ON o.OrderID = c.OrderID\n"
+                + "JOIN order_products op ON op.OrderID = c.OrderID\n"
+                + "WHERE c.CollectionDate > TO_DATE('" + date + "') + 8 AND o.OrderCompleted = 0";
+
+        String cleanupQuery = ""
+                + "BEGIN\n"
+                + "FOR record IN (" + outputQuery + ")\n"
+                + "LOOP\n"
+                    + "DELETE FROM collections c WHERE c.OrderID = record.OrderID;\n"
+                    + "DELETE FROM staff_orders so WHERE so.OrderID = record.OrderID;\n"
+                    + "DELETE FROM order_products op WHERE op.OrderID = record.OrderID;\n"
+                    + "DELETE FROM orders o WHERE o.OrderID = record.OrderID;\n"
+                    + "UPDATE inventory\n"
+                    + "SET ProductStockAmount = ProductStockAmount + record.ProductQuantity\n"
+                    + "WHERE ProductID = record.ProductID;\n"
+                + "END LOOP;\n"
+                + "END;\n"
+                + "/";
+
+        try {
+            checkValid(conn, "SELECT TO_DATE('" + date + "') FROM dual");
+        } catch (SQLException e) {
+            System.out.println("Date is invalid");
+            return;
+        }
+
+        StringBuilder out = new StringBuilder();
+
+        try {
+            Statement results = conn.createStatement();
+            Statement cleanup = conn.createStatement();
+
+            ResultSet rs =  results.executeQuery(outputQuery);
+            cleanup.executeQuery(cleanupQuery);
+
+            while (rs.next()) {
+                int productID = rs.getInt("ProductID");
+                out.append("Order " + productID + " has been cancelled");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Error occurred when cleaning database");
+            return;
+        }
+
+        System.out.println(out.toString());
     }
 
     /**
