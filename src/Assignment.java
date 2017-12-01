@@ -970,6 +970,22 @@ class Assignment {
      */
     public static void option4(Connection conn)
     {
+        String biggestSellers = "SELECT * FROM FormattedValueSold";
+        Formatting.TabularData table = new Formatting.TabularData("ProductID", "ProductDesc", "TotalValueSold");
+
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery(biggestSellers);
+
+        while (rs.next()) {
+            ArrayList<String> newRow = new ArrayList<>();
+            String id = rs.getString("Product ID");
+            String desc = rs.getString("Product Description");
+            String total = rs.getString("Total Value Sold");
+
+            newRow.add(id);
+            newRow.add(desc);
+            newRow.add(total);
+        }
     }
 
     /**
