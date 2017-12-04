@@ -220,7 +220,7 @@ FROM (
 -- Join inventory for ordering
 JOIN inventory i ON i.ProductID = sub.ProductID
 JOIN staff s ON s.StaffID = sub.StaffID
-ORDER BY TotalValueSold DESC, sub.ProductID
+ORDER BY TotalValueSold DESC, sub.ProductID;
 
 CREATE VIEW TopSellers AS
 SELECT ProductID FROM (
