@@ -1,4 +1,37 @@
 /*
+--------------------
+-- Design Choices --
+--------------------
+
+------------------------------------------------------------------------------------------------------------------------
+-- A separate "Customer" table with basic contact for a customer, as well as a first and last name, would remove some
+-- of the redundancy shared between the "Collections" and "Deliveries" tables. These tables could simply link to an
+-- entry in the customer table, rather than both sharing fields for first and last name.
+--
+-- Furthermore, a "Customer Address" table could be linked to a given customer. This would contain more advanced
+-- contact information such as their address which would be necessary for a delivery. Customers could be linked to
+-- addresses in a many-to-many relationship. One customer could request deliveries to many different locations, but
+-- different locations may be shared by different customers.
+--
+-- Combining these two would see much of the redundancy in the database removed. In its current state, the database will
+-- waste a lot of storage repeating information for repeat customers. However, by splitting Customer and Customer
+-- Address into their own tables, this data can be reused without penalty. The "Customers" table would be reduced to
+-- just a series of IDs, which would allow easier linking to new tables, such as for providing delivery history, or for
+-- linking to log on details for a website interface.
+--
+-- The "Orders" table should be directly linked to a staff member. Presently, many staff members could be linked to a
+-- single order, which should be impossible. Furthermore, it would make processing links between the tables easier.
+--
+-- A table for warehouse deliveries would make tracking stock levels easier. All warehouse deliveries subtracted from
+-- all order_products entries should sum to 0. This would provide a simple check for database integrity. Furthmore, it
+-- would allow the business to move more of their operations onto a more centralised system. Further extensions could
+-- involve
+------------------------------------------------------------------------------------------------------------------------
+
+---------------------
+-- SEQUENCES BELOW --
+---------------------
+
 -- Sequences are used to assign a primary key to each of the three main tables (staff, orders, inventory)
 -- The next value of the primary key is queried from the sequence when one needs to be created, and then can be used
 -- through the rest of the method when creating new entries that reference this one.
@@ -13,6 +46,10 @@ INCREMENT BY 1;
 CREATE SEQUENCE pk_inventory
 START WITH 1001
 INCREMENT BY 1;
+
+------------------
+-- TABLES BELOW --
+------------------
 
 CREATE TABLE inventory (
     ProductID INTEGER PRIMARY KEY,
@@ -157,7 +194,7 @@ ORDER BY Value DESC;
 CREATE VIEW StaffOrderData AS
 SELECT so.StaffID, so.OrderID, op.ProductID, op.ProductQuantity FROM staff_orders so
 JOIN orders o ON o.OrderID = so.OrderID
-JOIN order_products op ON op.orderID = so.OrderID;
+JOIN order_products op ON op.OrderID = so.OrderID;
 
 -- Group sales of the same product together
 CREATE VIEW StaffSaleProductQuantity AS
@@ -187,12 +224,53 @@ RIGHT JOIN staff S on s.StaffID = sstv.StaffID
 WHERE sstv.total > 50000
 ORDER BY NVL(sstv.total, 0) DESC;
 
+-- A list of the "top sellers", as defined by the brief for option 7
+-- Products whose total sales from all time exceed 20000
+CREATE VIEW TopSellers AS
+SELECT ProductID FROM (
+    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
+    LEFT JOIN order_products op ON op.ProductID = i.ProductID
+    GROUP BY i.ProductID, i.ProductPrice
+)
+WHERE Value > 20000;
+
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
+-- Columns are unsorted.
+-- Rows are sorted in order of how much of the top sellers each staff member has sold
 CREATE VIEW TopSellerSalesByStaff AS
-SELECT s.FName || ' ' || s.LName EmployeeName, sspq.ProductID, sspq.quant FROM StaffSaleProductQuantity sspq
-JOIN staff s ON sspq.StaffID = s.StaffID
-WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
-ORDER BY sspq.StaffID;
+SELECT
+    s.FName || ' ' || s.LName EmployeeName,
+    sub.StaffID StaffID,
+    sub.ProductID ProductID,
+    -- Get the
+    NVL ((
+        SELECT SUM(op.ProductQuantity) FROM staff s
+        JOIN staff_orders so ON so.StaffID = s.StaffID
+        JOIN order_products op ON op.OrderID = so.OrderID
+        JOIN inventory i ON i.ProductID = op.ProductID
+        WHERE s.StaffID = sub.StaffID AND i.ProductID = sub.ProductID
+    ), 0) QuantitySold,
+    -- Get the total value of all top sellers the staff member has sold
+    NVL ((
+        SELECT SUM(op.ProductQuantity * i.ProductPrice) FROM staff s
+        JOIN staff_orders so ON so.StaffID = s.StaffID
+        JOIN order_products op ON op.OrderID = so.OrderID
+        JOIN inventory i ON i.ProductID = op.ProductID
+        WHERE s.StaffID = sub.StaffID AND i.ProductID IN (SELECT * FROM TopSellers)
+    ), 0) TotalValueSold
+FROM (
+    -- Get all combinations of StaffID and ProductID
+    SELECT
+        s.StaffID,
+        ts.ProductID
+    FROM staff s
+    CROSS JOIN TopSellers ts
+    JOIN inventory i ON i.ProductID = ts.ProductID
+) sub
+-- Join inventory for ordering
+JOIN inventory i ON i.ProductID = sub.ProductID
+JOIN staff s ON s.StaffID = sub.StaffID
+ORDER BY TotalValueSold DESC, sub.ProductID;
 
 */
 

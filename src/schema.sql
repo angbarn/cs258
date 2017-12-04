@@ -1,3 +1,36 @@
+--------------------
+-- Design Choices --
+--------------------
+
+------------------------------------------------------------------------------------------------------------------------
+-- A separate "Customer" table with basic contact for a customer, as well as a first and last name, would remove some
+-- of the redundancy shared between the "Collections" and "Deliveries" tables. These tables could simply link to an
+-- entry in the customer table, rather than both sharing fields for first and last name.
+--
+-- Furthermore, a "Customer Address" table could be linked to a given customer. This would contain more advanced
+-- contact information such as their address which would be necessary for a delivery. Customers could be linked to
+-- addresses in a many-to-many relationship. One customer could request deliveries to many different locations, but
+-- different locations may be shared by different customers.
+--
+-- Combining these two would see much of the redundancy in the database removed. In its current state, the database will
+-- waste a lot of storage repeating information for repeat customers. However, by splitting Customer and Customer
+-- Address into their own tables, this data can be reused without penalty. The "Customers" table would be reduced to
+-- just a series of IDs, which would allow easier linking to new tables, such as for providing delivery history, or for
+-- linking to log on details for a website interface.
+--
+-- The "Orders" table should be directly linked to a staff member. Presently, many staff members could be linked to a
+-- single order, which should be impossible. Furthermore, it would make processing links between the tables easier.
+--
+-- A table for warehouse deliveries would make tracking stock levels easier. All warehouse deliveries subtracted from
+-- all order_products entries should sum to 0. This would provide a simple check for database integrity. Furthmore, it
+-- would allow the business to move more of their operations onto a more centralised system. Further extensions could
+-- involve
+------------------------------------------------------------------------------------------------------------------------
+
+---------------------
+-- SEQUENCES BELOW --
+---------------------
+
 -- Sequences are used to assign a primary key to each of the three main tables (staff, orders, inventory)
 -- The next value of the primary key is queried from the sequence when one needs to be created, and then can be used
 -- through the rest of the method when creating new entries that reference this one.
@@ -12,6 +45,10 @@ INCREMENT BY 1;
 CREATE SEQUENCE pk_inventory
 START WITH 1001
 INCREMENT BY 1;
+
+------------------
+-- TABLES BELOW --
+------------------
 
 CREATE TABLE inventory (
     ProductID INTEGER PRIMARY KEY,
