@@ -238,7 +238,7 @@ class InputHandler {
      * Printer at the end of an interrogation question. Separates the user's answer from the question.
      * Rather than include it in all questions, it's much easier to include it once and concat when it's required.
      */
-    private static final String questionBoundary = " >> ";
+    private static final String questionBoundary = ": ";
 
     /**
      * Turns a user's raw text input into a usable integer that we can switch on later.
@@ -491,18 +491,24 @@ class InputHandler {
                     int newId;
                     int newQuantity;
 
-                    newId = interrogateNumeric("Please enter product ID (0 to terminate)", numVal);
+                    // Get an ID and quantity
+                    newId = interrogateNumeric("Please enter product ID", numVal);
+                    newQuantity = interrogateNumeric("Please enter product quantity", numVal);
+
+                    // Add ID and quantity to each array list
+                    temporaryProductIds.add(newId);
+                    temporaryQuantities.add(newQuantity);
 
                     // If we need to terminate, do so
-                    if (newId == 0) {
-                        loop = false;
-                    // Otherwise, get a quantity
-                    } else {
-                        newQuantity = interrogateNumeric("Please enter product quantity", numVal);
-
-                        // Add ID and quantity to each array list
-                        temporaryProductIds.add(newId);
-                        temporaryQuantities.add(newQuantity);
+                    // We err on the side of adding more items, since this way if a single order has many products,
+                    // it's easier to add them in series.
+                    try {
+                        String terminationQuery = interrogate("Is there another product in the order?", strVal);
+                        if (terminationQuery.toLowerCase().equals("n") || terminationQuery.toLowerCase().equals("no")) {
+                            loop = false;
+                        }
+                    } catch (ClientValidationError e) {
+                        // Swallow the exception, as we assume a blank means we want to continue.
                     }
                 }
 
