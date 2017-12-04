@@ -156,7 +156,7 @@ ORDER BY Value DESC;
 CREATE VIEW StaffOrderData AS
 SELECT so.StaffID, so.OrderID, op.ProductID, op.ProductQuantity FROM staff_orders so
 JOIN orders o ON o.OrderID = so.OrderID
-JOIN order_products op ON op.orderID = so.OrderID;
+JOIN order_products op ON op.OrderID = so.OrderID;
 
 -- Group sales of the same product together
 CREATE VIEW StaffSaleProductQuantity AS
@@ -188,7 +188,38 @@ ORDER BY NVL(sstv.total, 0) DESC;
 
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
 CREATE VIEW TopSellerSalesByStaff AS
-SELECT s.FName || ' ' || s.LName EmployeeName, sspq.ProductID, sspq.quant FROM StaffSaleProductQuantity sspq
-JOIN staff s ON sspq.StaffID = s.StaffID
-WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
-ORDER BY sspq.StaffID;
+SELECT
+    s.FName || ' ' || s.LName StaffName,
+    sub.StaffID StaffID,
+    sub.ProductID ProductID,
+    NVL ((
+        SELECT SUM(op.ProductQuantity) FROM staff s
+        JOIN staff_orders so ON so.StaffID = s.StaffID
+        JOIN order_products op ON op.OrderID = so.OrderID
+        JOIN inventory i ON i.ProductID = op.ProductID
+        WHERE s.StaffID = sub.StaffID AND i.ProductID = sub.ProductID
+    ), 0) QuantitySold
+FROM (
+    -- Get all combinations of StaffID and top seller product ID
+    SELECT
+        s.StaffID,
+        topsellers.ProductID
+    FROM staff s
+    -- Get top seller product IDs
+    CROSS JOIN (SELECT sales.ProductID FROM (
+                    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
+                    LEFT JOIN order_products op ON op.ProductID = i.ProductID
+                    GROUP BY i.ProductID, i.ProductPrice
+                ) sales
+        WHERE sales.Value > 20000) topsellers
+    JOIN inventory i ON i.ProductID = topsellers.ProductID
+) sub
+-- Join inventory for ordering
+JOIN inventory i ON i.ProductID = sub.ProductID
+JOIN staff s ON s.StaffID = sub.StaffID
+ORDER BY
+    sub.StaffID ASC,
+    (
+        SELECT value FROM ProductValueSold
+        WHERE id = i.ProductID
+    ) DESC;
