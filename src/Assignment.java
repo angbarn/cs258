@@ -1475,7 +1475,7 @@ class Assignment {
         // Construct headers
         headers.add("EmployeeName");
         for (int productID : productIDs) {
-            headers.add("" + productID);
+            headers.add("Product " + productID);
         }
 
         // Construct table
