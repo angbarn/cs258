@@ -188,38 +188,50 @@ ORDER BY NVL(sstv.total, 0) DESC;
 
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
 CREATE VIEW TopSellerSalesByStaff AS
+SELECT s.FName || ' ' || s.LName EmployeeName, sspq.ProductID, sspq.quant FROM StaffSaleProductQuantity sspq
+JOIN staff s ON sspq.StaffID = s.StaffID
+WHERE sspq.ProductID IN (SELECT pvs.id FROM ProductValueSold pvs WHERE pvs.value > 20000)
+ORDER BY sspq.StaffID;
+
+CREATE VIEW TopSellerSalesByStaff AS
 SELECT
-    s.FName || ' ' || s.LName StaffName,
+    s.FName || ' ' || s.LName EmployeeName,
     sub.StaffID StaffID,
     sub.ProductID ProductID,
+    -- Get the
     NVL ((
         SELECT SUM(op.ProductQuantity) FROM staff s
         JOIN staff_orders so ON so.StaffID = s.StaffID
         JOIN order_products op ON op.OrderID = so.OrderID
         JOIN inventory i ON i.ProductID = op.ProductID
         WHERE s.StaffID = sub.StaffID AND i.ProductID = sub.ProductID
-    ), 0) QuantitySold
+    ), 0) QuantitySold,
+    -- Get the total value of all top sellers the staff member has sold
+    NVL ((
+        SELECT SUM(op.ProductQuantity * i.ProductPrice) FROM staff s
+        JOIN staff_orders so ON so.StaffID = s.StaffID
+        JOIN order_products op ON op.OrderID = so.OrderID
+        JOIN inventory i ON i.ProductID = op.ProductID
+        WHERE s.StaffID = sub.StaffID AND i.ProductID IN (SELECT * FROM TopSellers)
+    ), 0) TotalValueSold
 FROM (
-    -- Get all combinations of StaffID and top seller product ID
+    -- Get all combinations of StaffID and ProductID
     SELECT
         s.StaffID,
-        topsellers.ProductID
+        ts.ProductID
     FROM staff s
-    -- Get top seller product IDs
-    CROSS JOIN (SELECT sales.ProductID FROM (
-                    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
-                    LEFT JOIN order_products op ON op.ProductID = i.ProductID
-                    GROUP BY i.ProductID, i.ProductPrice
-                ) sales
-        WHERE sales.Value > 20000) topsellers
-    JOIN inventory i ON i.ProductID = topsellers.ProductID
+    CROSS JOIN TopSellers ts
+    JOIN inventory i ON i.ProductID = ts.ProductID
 ) sub
 -- Join inventory for ordering
 JOIN inventory i ON i.ProductID = sub.ProductID
 JOIN staff s ON s.StaffID = sub.StaffID
-ORDER BY
-    sub.StaffID ASC,
-    (
-        SELECT value FROM ProductValueSold
-        WHERE id = i.ProductID
-    ) DESC;
+ORDER BY TotalValueSold DESC, sub.ProductID
+
+CREATE VIEW TopSellers AS
+SELECT ProductID FROM (
+    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
+    LEFT JOIN order_products op ON op.ProductID = i.ProductID
+    GROUP BY i.ProductID, i.ProductPrice
+)
+WHERE Value > 20000;
