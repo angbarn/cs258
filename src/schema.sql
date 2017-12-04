@@ -186,6 +186,15 @@ RIGHT JOIN staff S on s.StaffID = sstv.StaffID
 WHERE sstv.total > 50000
 ORDER BY NVL(sstv.total, 0) DESC;
 
+-- A list of the "top sellers", as defined by the brief for option 7
+CREATE VIEW TopSellers AS
+SELECT ProductID FROM (
+    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
+    LEFT JOIN order_products op ON op.ProductID = i.ProductID
+    GROUP BY i.ProductID, i.ProductPrice
+)
+WHERE Value > 20000;
+
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
 CREATE VIEW TopSellerSalesByStaff AS
 SELECT
@@ -221,11 +230,3 @@ FROM (
 JOIN inventory i ON i.ProductID = sub.ProductID
 JOIN staff s ON s.StaffID = sub.StaffID
 ORDER BY TotalValueSold DESC, sub.ProductID;
-
-CREATE VIEW TopSellers AS
-SELECT ProductID FROM (
-    SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
-    LEFT JOIN order_products op ON op.ProductID = i.ProductID
-    GROUP BY i.ProductID, i.ProductPrice
-)
-WHERE Value > 20000;
