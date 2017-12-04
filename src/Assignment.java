@@ -239,7 +239,7 @@ class InputHandler {
      * Rather than include it in all questions, it's much easier to include it once and concat when it's required.
      */
     private static final String questionBoundary = " >> ";
-    
+
     /**
      * Turns a user's raw text input into a usable integer that we can switch on later.
      * @param prompt The raw text from the user's selection input
@@ -259,7 +259,7 @@ class InputHandler {
 
         return (processedInput);
     }
-    
+
     /**
      * Gets the username and password from the user.
      * This information is returned in an array, where the first item is the username, and the second is that password.
@@ -275,7 +275,7 @@ class InputHandler {
 
         return (answers);
     }
-    
+
     /**
      * Poses a question to the user, and performs validation on their input, before returning it back.
      * A higher-level interface to readEntry(...).
@@ -296,7 +296,7 @@ class InputHandler {
             throw new ClientValidationError("Answer to \"" + question + "\" failed to validate.");
         }
     }
-    
+
     /**
      * @see #interrogate(String, ValidationService.IValidator)
      * A slight twist, in that inputs are automatically cast to integers when returned. This means that any validator
@@ -312,7 +312,7 @@ class InputHandler {
             throws ClientValidationError {
         return (Integer.parseInt(interrogate(question, validator)));
     }
-    
+
     /**
      * Reads an entry from the user.
      * @param prompt The prompt to give the user when requesting an input
@@ -336,7 +336,7 @@ class InputHandler {
             return "";
         }
     }
-    
+
     /**
      * Contains various classes which deal with Java-side validation of user input.
      * Since most of the validation we want to do is SQL-side, validators are relatively basic.
@@ -356,7 +356,7 @@ class InputHandler {
              */
             boolean validate(String ans);
         }
-    
+
         /**
          * Ensures that the user's input isn't just the empty string. A relatively general purpose validator, for all
          * those times where we don't really need a validator, but the method requires us to have one anyway.
@@ -369,7 +369,7 @@ class InputHandler {
              */
             public boolean validate(String ans) { return (ans.length() > 0); }
         }
-    
+
         /**
          * Ensures that the user's input is numeric - i.e., it's an integer.
          * The program will never need to deal with decimal numbers, so there is no need to allow for them.
@@ -387,7 +387,7 @@ class InputHandler {
                 return (ans.matches("\\d+"));
             }
         }
-    
+
         /**
          * Ensures that the user's input matches the date format required by SQL, and that the date is "valid" in the
          * loosest sense of the word - the day is between 1 and 31.
@@ -406,7 +406,7 @@ class InputHandler {
                 success = false;
                 // 2 digits, a dash, a capital, two lowercase, a dash, 2 digits
                 regexMatch = "\\d\\d-[A-Z][a-z]{2}-\\d\\d";
-                
+
                 if (ans.matches(regexMatch)) {
                     // 012345678
                     // 01-Jan-17
@@ -422,7 +422,7 @@ class InputHandler {
             }
         }
     }
-    
+
     /**
      * Handles fetching the required user inputs for a given menu item, performs some light processing to package up
      * inputs correctly, and then passes these to the resulting methods.
@@ -441,7 +441,7 @@ class InputHandler {
          * A validator to ensure an input is a correctly formatted date.
          */
         private static ValidationService.DateValidator datVal;
-    
+
         static {
             // Instantiate instances of each validator for later use
             // A new validator could be created each time, but this makes code neater
@@ -449,7 +449,7 @@ class InputHandler {
             numVal = new ValidationService.NumericValidator();
             datVal = new ValidationService.DateValidator();
         }
-    
+
         /**
          * Handles fetching data for a basic order. This means a list of product IDs, a list of quantities of each of
          * these products, a staff ID and an order date.
@@ -475,7 +475,7 @@ class InputHandler {
              * The date that the order was made.
              */
             private String orderDate;
-    
+
             /**
              * Repeatedly requests a new product ID and a corresponding quantity for this product, until the list is
              * terminated with a product ID of 0.
@@ -514,7 +514,7 @@ class InputHandler {
                     quantities[i] = temporaryQuantities.get(i);
                 }
             }
-    
+
             /**
              * Requests a date from the user for the order.
              * @throws ClientValidationError If the date entered is invalid in some way
@@ -522,7 +522,7 @@ class InputHandler {
             private void inputOrderDate() throws ClientValidationError {
                 orderDate = interrogate("Please enter the date of the order", datVal);
             }
-    
+
             /**
              * Requests a staff ID from the user
              * @throws ClientValidationError If the ID entered is invalid in some way
@@ -530,7 +530,7 @@ class InputHandler {
             private void inputStaffId() throws ClientValidationError {
                 staffId = interrogateNumeric("Please enter your staff ID", numVal);
             }
-    
+
             /**
              * Gets the array of product IDs.
              * @return The array of product IDs.
@@ -538,7 +538,7 @@ class InputHandler {
             public int[] getProductIds() {
                 return (productIds);
             }
-    
+
             /**
              * Gets the array of quantities.
              * @return The array of quantities.
@@ -546,7 +546,7 @@ class InputHandler {
             public int[] getQuantities() {
                 return (quantities);
             }
-    
+
             /**
              * Gets the date the order was made.
              * @return The date the order was made.
@@ -554,7 +554,7 @@ class InputHandler {
             public String getOrderDate() {
                 return (orderDate);
             }
-    
+
             /**
              * Gets the staff ID of whoever entered the order
              * @return The staff ID of whoever entered the order
@@ -562,7 +562,7 @@ class InputHandler {
             public int getStaffId() {
                 return (staffId);
             }
-    
+
             /**
              * Constructor method that fills in information.
              * @throws ClientValidationError If any of the inputs fail at any point.
@@ -573,7 +573,7 @@ class InputHandler {
                 inputStaffId();
             }
         }
-    
+
         /**
          * Handles fetching information about a customer. This is relevant for collection or deliveries. Since both
          * require slightly different information, but with some slight overlap, the class only collects data relevant
@@ -593,7 +593,7 @@ class InputHandler {
              * The second name of the customer
              */
             private String lName;
-    
+
             /**
              * The collection date for the order
              */
@@ -602,7 +602,7 @@ class InputHandler {
              * The guard for turning this {@code CustomerInformation} object into one that deals with collections.
              */
             private boolean collectionSet;
-    
+
             /**
              * The delivery date for the order
              */
@@ -623,7 +623,7 @@ class InputHandler {
              * The guard for turning this {@code CustomerInformation} object into one that deals with deliveries.
              */
             private boolean deliverySet;
-    
+
             /**
              * Collects basic name information common to both order types.
              * @throws ClientValidationError If either name provided is the empty string.
@@ -632,7 +632,7 @@ class InputHandler {
                 fName = interrogate("What is the customer's first name?", strVal);
                 lName = interrogate("What is the customer's second name?", strVal);
             }
-    
+
             /**
              * Requests information for a collection order (i.e., the collection date). Disables the guard blocking
              * retrieval of collection data.
@@ -648,7 +648,7 @@ class InputHandler {
                     throw new IllegalStateException("Collection information retrieved twice");
                 }
             }
-    
+
             /**
              * Requests information for a delivery order (i.e., a delivery date, and an address in three parts).
              * Disables the guard blocking retrieval of delivery data.
@@ -667,7 +667,7 @@ class InputHandler {
                     throw new IllegalStateException("Delivery information retrieved twice");
                 }
             }
-    
+
             /**
              * An override which assumes that the guard allows the retrieval. This function actually doesn't do
              * anything, and {@code value} is equivalent to {@code retrieveData(value)}, but this makes formatting of
@@ -678,7 +678,7 @@ class InputHandler {
             private String retrieveData(String value) {
                 return (retrieveData(value, true));
             }
-    
+
             /**
              * Attempts to retrieve the provided data, but only if the provided guard allows it.
              * @param value The data we want to retrieve.
@@ -693,54 +693,54 @@ class InputHandler {
                     throw new IllegalStateException("Data requested before set");
                 }
             }
-    
+
             /**
              * Retrieves the customer's first name.
              * @return The customer's first name.
              */
             public String getFName()            { return (retrieveData(fName)); }
-    
+
             /**
              * Retrieves the customer's last name.
              * @return The customer's last name.
              */
             public String getLName()            { return (retrieveData(lName)); }
-    
+
             /**
              * Retrieves the order's collection date, if this order is a collection.
              * @return The order's collection date.
              * @throws IllegalStateException If {@see #inputCollection} has not been called first.
              */
             public String getCollectionDate()   { return (retrieveData(collectionDate, collectionSet)); }
-    
+
             /**
              * Retrieves the order's delivery date, if this order is a delivery.
              * @return The order's delivery date.
              * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
              */
             public String getDeliveryDate()     { return (retrieveData(deliveryDate, deliverySet)); }
-            
+
             /**
              * Retrieves the order's house address, if this order is a delivery.
              * @return The order's house address.
              * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
              */
             public String getHouse()            { return (retrieveData(house,        deliverySet)); }
-            
+
             /**
              * Retrieves the order's street address, if this order is a delivery.
              * @return The order's street address.
              * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
              */
             public String getStreet()           { return (retrieveData(street,       deliverySet)); }
-            
+
             /**
              * Retrieves the order's city address, if this order is a delivery.
              * @return The order's city address.
              * @throws IllegalStateException If {@see #inputDelivery} has not been called first.
              */
             public String getCity()             { return (retrieveData(city,         deliverySet)); }
-    
+
             /**
              * Retrieves basic information common to all orders (customer name), and enables the guards against
              * retrieving either collection or delivery data.
@@ -753,7 +753,7 @@ class InputHandler {
                 deliverySet = false;
             }
         }
-    
+
         /**
          * Gets user input required for menu option 1, and then performs menu option 1.
          * (In store purchase).
@@ -767,15 +767,15 @@ class InputHandler {
                 System.out.println("The information you entered is invalid.");
                 return;
             }
-    
+
             int[]   productIDs = container.getProductIds();
             int[]   quantities = container.getQuantities();
             String  orderDate  = container.getOrderDate();
             int     staffID    = container.getStaffId();
-    
+
             Assignment.option1(conn, productIDs, quantities, orderDate, staffID);
         }
-    
+
         /**
          * Gets user input required for menu option 2, and then performs menu option 2.
          * (Collection)
@@ -784,7 +784,7 @@ class InputHandler {
         public static void inputOption2(Connection conn) {
             BaseProductData container;
             CustomerInformation customer;
-            
+
             try {
                 container = new InputHandler.OptionHandler.BaseProductData();
                 customer = new InputHandler.OptionHandler.CustomerInformation();
@@ -793,7 +793,7 @@ class InputHandler {
                 System.out.println("The information you entered is invalid.");
                 return;
             }
-    
+
             int[] productIds        = container.getProductIds();
             int[] quantities        = container.getQuantities();
             String orderDate        = container.getOrderDate();
@@ -801,10 +801,10 @@ class InputHandler {
             String collectionDate   = customer.getCollectionDate();
             String fName            = customer.getFName();
             String lName            = customer.getLName();
-    
+
             Assignment.option2(conn, productIds, quantities, orderDate, collectionDate, fName, lName, staffId);
         }
-    
+
         /**
          * Gets user input required for menu option 3, and then performs menu option 3.
          * (Delivery)
@@ -813,7 +813,7 @@ class InputHandler {
         public static void inputOption3(Connection conn)  {
             BaseProductData container;
             CustomerInformation customer;
-            
+
             try {
                 container = new InputHandler.OptionHandler.BaseProductData();
                 customer = new InputHandler.OptionHandler.CustomerInformation();
@@ -827,7 +827,7 @@ class InputHandler {
             int[] quantities        = container.getQuantities();
             String orderDate        = container.getOrderDate();
             int staffId             = container.getStaffId();
-            
+
             String deliveryDate = customer.getDeliveryDate();
             String fName = customer.getFName();
             String lName = customer.getLName();
@@ -913,7 +913,7 @@ class Formatting {
         private ArrayList<ArrayList<String>> data;
         /**
          * Explicitly maintain column count - used to enforce cell count in new rows
-         */        
+         */
         private int columns;
 
         /**
@@ -1042,14 +1042,14 @@ class Assignment {
         String order_products__creationStatement;
         String inventory__checkStatement;
         String inventory__updateStatement;
-        
+
         // Check inputs are valid
         try {
             if (!checkValid(conn, "SELECT * FROM staff WHERE StaffID = " + staffID)) {
                 System.out.println("Staff ID was invalid");
                 return (-1);
             }
-            
+
             if (!checkValid(conn, "SELECT TO_DATE('" + orderDate + "') FROM dual")) {
                 System.out.println("Order date was invalid");
                 return (-1);
@@ -1058,14 +1058,14 @@ class Assignment {
             e.printStackTrace();
             System.out.println("Error occurred when testing inputs.");
         }
-        
+
         // Get currently remaining stock
         currentQuantities = new int[productIDs.length];
         for (int i = 0; i < productIDs.length; i++) {
             int productID = productIDs[i];
             int quantity = quantities[i];
             inventory__checkStatement = "SELECT ProductStockAmount FROM inventory WHERE ProductID = " + productID;
-            
+
             // Load currently remaining stock for each item from the database
             try {
                 Statement stmt = conn.createStatement();
@@ -1080,7 +1080,7 @@ class Assignment {
                 System.out.println("Error occurred checking stock quantity.");
                 return (-1);
             }
-            
+
             // Ensure the remaining stock is sufficient for the order to complete
             if (currentQuantities[i] < quantity) {
                 System.out.println("Insufficient quantity for product " + productID + ": " + quantity + " requested " +
@@ -1091,7 +1091,7 @@ class Assignment {
                 currentQuantities[i] = currentQuantities[i] - quantity;
             }
         }
-        
+
         // Get primary key of new order
         try {
             Statement stmt = conn.createStatement();
@@ -1103,13 +1103,13 @@ class Assignment {
             System.out.println("Error finding primary key");
             return (-1);
         }
-    
+
         // Construct orders and staff_orders queries
         orders__creationStatement = "INSERT INTO orders (OrderID, OrderType, OrderCompleted, OrderPlaced) VALUES (" +
                 newOrderPrimaryKey + ", '" + orderType + "', " + completed + ", '" + orderDate + "')";
         staff_orders__creationStatement = "INSERT INTO staff_orders (OrderID, StaffID) VALUES (" + newOrderPrimaryKey +
                 ", " + staffID + ")";
-        
+
         // Run orders query
         try {
             Statement stmt = conn.createStatement();
@@ -1123,7 +1123,7 @@ class Assignment {
             System.out.println("Error occurred.");
             return (-1);
         }
-    
+
         // Run staff_orders query
         try {
             Statement stmt = conn.createStatement();
@@ -1136,17 +1136,17 @@ class Assignment {
             System.out.println("Error occurred.");
             return (-1);
         }
-        
+
         // Create order_products entries, and update quantities in inventory
         for (int i = 0; i < productIDs.length; i++) {
             int productId = productIDs[i];
             int quantity = quantities[i];
-            
+
             order_products__creationStatement = "INSERT INTO order_products (OrderID, ProductID, ProductQuantity)" +
                     "VALUES (" + newOrderPrimaryKey + ", " + productId + ", " + quantity + ")";
             inventory__updateStatement = "UPDATE inventory SET ProductStockAmount = ProductStockAmount - " + quantity +
                     " WHERE ProductID = " + productId;
-            
+
             // Create the order
             try {
                 conn.createStatement().executeQuery(order_products__creationStatement);
@@ -1158,7 +1158,7 @@ class Assignment {
                 System.out.println("Error occurred");
                 return (-1);
             }
-            
+
             // Update inventory stock levels
             try {
                 Statement stmt = conn.createStatement();
@@ -1173,7 +1173,7 @@ class Assignment {
                 return (-1);
             }
         }
-        
+
         // Output new product quantities
         for (int i = 0; i < productIDs.length; i++) {
             StringBuilder out = new StringBuilder("Product ID ");
@@ -1184,13 +1184,13 @@ class Assignment {
             }
             out.append("is now at ");
             out.append(currentQuantities[i]);
-            
+
             System.out.println(out.toString());
         }
 
         return (newOrderPrimaryKey);
     }
-    
+
     /**
      * @param conn An open database connection
      * @param productIDs An array of productIDs associated with an order
@@ -1234,7 +1234,7 @@ class Assignment {
                 Statement stmt = conn.createStatement();
                 stmt.executeQuery(collections__creationStatement);
             } catch (SQLIntegrityConstraintViolationException e) {
-                System.out.println("Collection date invalid");                
+                System.out.println("Collection date invalid");
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred.");
@@ -1268,9 +1268,9 @@ class Assignment {
         // If success, insert entry into deliveries table
         if (orderPrimaryKey != -1) {
             deliveries__creation_statement = "INSERT INTO deliveries (OrderID, FName, LName, DeliveryDate, House, " +
-                    "Street, City) VALUES (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + deliveryDate + 
+                    "Street, City) VALUES (" + orderPrimaryKey + ", '" + fName + "', '" + lName + "', '" + deliveryDate +
                     "', '" + house + "', '" + street + "', '" + city + "')";
-            
+
             // Make the insertion
             try {
                 Statement stmt = conn.createStatement();
@@ -1429,39 +1429,42 @@ class Assignment {
     {
         // Gets a list of all sales of all top selling products by all staff
         String topSellerSalesQuery = "SELECT * FROM TopSellerSalesByStaff";
-        // Effectively a 2D hash map - Indexed by employee name, then by the product ID
-        // The value stored is the quantity of the given item they sold
-        HashMap<String, HashMap<Integer, Integer>> salesRecord = new HashMap<>();
-        // The hash set is used to ensure values are printed for all items for all staff, even if they didn't sell any
-        HashSet<Integer> allProductIDs = new HashSet<>();
+
+        ArrayList<ArrayList<String>> employeeData = new ArrayList<>();
+        ArrayList<Integer>           productIDs   = new ArrayList<>();
+        ArrayList<String>            headers      = new ArrayList<>();
+        HashSet<Integer>             staffIDs     = new HashSet<>();
 
         try {
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(topSellerSalesQuery);
+            ResultSet rs   = stmt.executeQuery(topSellerSalesQuery);
+
+            employeeData = new ArrayList<>();
+            productIDs   = new ArrayList<>();
+            staffIDs     = new HashSet<>();
 
             while (rs.next()) {
-                HashMap<Integer, Integer> staffSales;
-
-                String employee = rs.getString("EmployeeName");
+                int staffID   = rs.getInt("StaffID");
                 int productID = rs.getInt("ProductID");
-                int quantity = rs.getInt("Quant");
+                int quantity  = rs.getInt("QuantitySold");
+                String name   = rs.getString("EmployeeName");
 
-                // Make sure product is in hash set
-                allProductIDs.add(productID);
-
-                // Make sure staff member is in hashmap
-                if (!salesRecord.containsKey(employee)) {
-                    staffSales = new HashMap<>();
-                    salesRecord.put(employee, staffSales);
-                } else {
-                    staffSales = salesRecord.get(employee);
+                // If un-encountered staff ID, set up for new staff member
+                if (!staffIDs.contains(staffID)) {
+                    // Add staff ID to set
+                    staffIDs.add(staffID);
+                    // Begin new table row
+                    employeeData.add(new ArrayList<>());
+                    employeeData.get(employeeData.size() - 1).add(name);
                 }
 
-                // Add to old quantity if already present
-                if (staffSales.containsKey(productID)) {
-                    quantity = quantity + staffSales.get(productID);
+                // Add all product ID data the first cycle round
+                if (employeeData.size() == 1) {
+                    productIDs.add(productID);
                 }
-                staffSales.put(productID, quantity);
+
+                // Add quantity to data of most recent employee
+                employeeData.get(employeeData.size() - 1).add("" + quantity);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1469,41 +1472,17 @@ class Assignment {
             return;
         }
 
-        // Construct table and headers
-        ArrayList<String> headers = new ArrayList<>();
+        // Construct headers
         headers.add("EmployeeName");
-        for (int id : allProductIDs) {
-            headers.add("Product " + id);
+        for (int productID : productIDs) {
+            headers.add("" + productID);
         }
+
+        // Construct table
         Formatting.TabularData table = new Formatting.TabularData(headers);
-
-        // Construct rows of CSV table
-        for (String employeeName : salesRecord.keySet()) {
-            ArrayList<String> newRow = new ArrayList<>();
-            // Get the entry in the sales records that corresponds to this employee
-            HashMap<Integer, Integer> employeeRow = salesRecord.get(employeeName);
-            newRow.add(employeeName);
-            
-            for (int id : allProductIDs) {
-                String quantity;
-                // For every top selling item (given by the set), find the number of items this employee sold
-                if (employeeRow.containsKey(id)) {
-                    quantity = employeeRow.get(id).toString();
-                } else {
-                    // Absence is taken as 0 sold
-                    quantity = "0";
-                }
-
-                // Add to row
-                newRow.add(quantity);
-            }
-
-            // Add row to table
-            table.add(newRow);
-        }
-
-        // Output table
+        table.addRows(employeeData);
         System.out.println(table.toString());
+
     }
 
     /**
@@ -1593,7 +1572,7 @@ class Assignment {
             return;
         }
     }
-    
+
     /**
      * Gets the user's credentials, and uses them to connect to the database.
      * @return The connection object provided by connecting to the database.
@@ -1626,7 +1605,7 @@ class Assignment {
 
         return (conn);
     }
-    
+
     /**
      * Cleans up just before the program exits.
      * @param conn The database connection to close.
@@ -1637,16 +1616,16 @@ class Assignment {
 
         System.out.println("Database system exited.");
     }
-    
+
     /**
      * Provides a menu to the user so that they may make selections.
      * @return A menu formatted as a single string.
      */
     private static String getMenu() {
         StringBuilder menu = new StringBuilder();
-        
+
         for (int i = 0; i < 3; i++) menu.append("\n");
-    
+
         menu.append("1) In-Store purchase\n");
         menu.append("2) Collection\n");
         menu.append("3) Delivery\n");
@@ -1656,7 +1635,7 @@ class Assignment {
         menu.append("7) Staff contribution\n");
         menu.append("8) Employees of the year\n");
         menu.append("0) Quit\n");
-        
+
         return (menu.toString());
     }
 
@@ -1701,7 +1680,7 @@ class Assignment {
                 default:    System.out.println("Invalid selection.");
             }
         }
-        
+
         exit(conn);
     }
 }
