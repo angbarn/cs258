@@ -187,6 +187,7 @@ WHERE sstv.total > 50000
 ORDER BY NVL(sstv.total, 0) DESC;
 
 -- A list of the "top sellers", as defined by the brief for option 7
+-- Products whose total sales from all time exceed 20000
 CREATE VIEW TopSellers AS
 SELECT ProductID FROM (
     SELECT i.ProductID, i.ProductPrice, SUM(i.ProductPrice * NVL(op.ProductQuantity, 0)) Value FROM inventory i
@@ -196,6 +197,8 @@ SELECT ProductID FROM (
 WHERE Value > 20000;
 
 -- Output the quantity of sales by staff members of all products selling over 20000 worth of value
+-- Columns are unsorted.
+-- Rows are sorted in order of how much of the top sellers each staff member has sold
 CREATE VIEW TopSellerSalesByStaff AS
 SELECT
     s.FName || ' ' || s.LName EmployeeName,
