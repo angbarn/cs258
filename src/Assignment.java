@@ -277,7 +277,6 @@ ORDER BY TotalValueSold DESC, sub.ProductID;
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
@@ -1447,7 +1446,7 @@ class Assignment {
     public static void option5(Connection conn, String date)
     {
         String outputQuery = ""
-                + "SELECT DISTINCT op.OrderID\n"
+                + "SELECT op.ProductID, op.OrderID, op.ProductQuantity\n"
                 + "FROM collections c\n"
                 + "JOIN orders o ON o.OrderID = c.OrderID\n"
                 + "JOIN order_products op ON op.OrderID = c.OrderID\n"
@@ -1477,6 +1476,7 @@ class Assignment {
         StringBuilder out = new StringBuilder();
 
         try {
+            HashSet<Integer> orderIDs = new HashSet<>();
             Statement results = conn.createStatement();
             Statement cleanup = conn.createStatement();
 
@@ -1484,8 +1484,13 @@ class Assignment {
             cleanup.execute(cleanupScript);
 
             while (rs.next()) {
-                int productID = rs.getInt("OrderID");
-                out.append("Order " + productID + " has been cancelled\n");
+                // We could solve this instead with another query which uses DISTINCT. However, this allows us to reuse
+                // the same query in cleanupScript, making code a bit neater.
+                int orderID = rs.getInt("OrderID");
+                if (!orderIDs.contains(orderID)) {
+                    out.append("Order " + orderID + " has been cancelled\n");
+                }
+                orderIDs.add(orderID);
             }
 
             rs.close();
