@@ -1447,7 +1447,7 @@ class Assignment {
     public static void option5(Connection conn, String date)
     {
         String outputQuery = ""
-                + "SELECT op.ProductID, op.OrderID, op.ProductQuantity\n"
+                + "SELECT DISTINCT op.OrderID\n"
                 + "FROM collections c\n"
                 + "JOIN orders o ON o.OrderID = c.OrderID\n"
                 + "JOIN order_products op ON op.OrderID = c.OrderID\n"
@@ -1484,7 +1484,7 @@ class Assignment {
             cleanup.execute(cleanupScript);
 
             while (rs.next()) {
-                int productID = rs.getInt("ProductID");
+                int productID = rs.getInt("OrderID");
                 out.append("Order " + productID + " has been cancelled\n");
             }
 
