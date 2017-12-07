@@ -1105,7 +1105,12 @@ class Assignment {
     private static boolean checkValid(Connection conn, String query) throws SQLException {
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(query);
-        return (rs.next());
+        boolean success = rs.next();
+
+        rs.close();
+        stmt.close();
+
+        return (success);
     }
 
     /**
@@ -1159,6 +1164,9 @@ class Assignment {
                     return (-1);
                 }
                 currentQuantities[i] = rs.getInt("PRODUCTSTOCKAMOUNT");
+
+                rs.close();
+                stmt.close();
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("Error occurred checking stock quantity.");
@@ -1182,6 +1190,9 @@ class Assignment {
             ResultSet pkQuery = stmt.executeQuery("SELECT pk_order.nextval FROM dual");
             pkQuery.next();
             newOrderPrimaryKey = pkQuery.getInt("NEXTVAL");
+
+            pkQuery.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error finding primary key");
@@ -1197,7 +1208,11 @@ class Assignment {
         // Run orders query
         try {
             Statement stmt = conn.createStatement();
-            stmt.executeQuery(orders__creationStatement);
+            // Save rs just so that we can close it
+            ResultSet rs = stmt.executeQuery(orders__creationStatement);
+
+            stmt.close();
+            rs.close();
         } catch (SQLIntegrityConstraintViolationException e) {
             e.printStackTrace();
             System.out.println("Order date invalid");
@@ -1211,7 +1226,10 @@ class Assignment {
         // Run staff_orders query
         try {
             Statement stmt = conn.createStatement();
-            stmt.executeQuery(staff_orders__creationStatement);
+            ResultSet rs = stmt.executeQuery(staff_orders__creationStatement);
+
+            stmt.close();
+            rs.close();
         } catch (SQLIntegrityConstraintViolationException e) {
             System.out.println("Staff ID invalid");
             return (-1);
@@ -1246,7 +1264,10 @@ class Assignment {
             // Update inventory stock levels
             try {
                 Statement stmt = conn.createStatement();
-                stmt.executeQuery(inventory__updateStatement);
+                ResultSet rs = stmt.executeQuery(inventory__updateStatement);
+
+                rs.close();
+                stmt.close();
             } catch (SQLIntegrityConstraintViolationException e) {
                 // Shouldn't ever happen, because we checked at the start
                 System.out.println("Insufficient product remains. Database integrity compromised.");
@@ -1316,7 +1337,10 @@ class Assignment {
             // Make the insertion
             try {
                 Statement stmt = conn.createStatement();
-                stmt.executeQuery(collections__creationStatement);
+                ResultSet rs = stmt.executeQuery(collections__creationStatement);
+
+                rs.close();
+                stmt.close();
             } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Collection date invalid");
             } catch (SQLException e) {
@@ -1358,7 +1382,10 @@ class Assignment {
             // Make the insertion
             try {
                 Statement stmt = conn.createStatement();
-                stmt.executeQuery(deliveries__creation_statement);
+                ResultSet rs = stmt.executeQuery(deliveries__creation_statement);
+
+                rs.close();
+                stmt.close();
             } catch (SQLIntegrityConstraintViolationException e) {
                 System.out.println("Delivery date was invalid");
             } catch (SQLException e) {
@@ -1401,6 +1428,9 @@ class Assignment {
                 // Add newly constructed row to table
                 table.add(newRow);
             }
+
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error in application");
@@ -1451,12 +1481,17 @@ class Assignment {
             Statement cleanup = conn.createStatement();
 
             ResultSet rs =  results.executeQuery(outputQuery);
-            cleanup.execute(cleanupScript);
+            ResultSet cleanRs = cleanup.execute(cleanupScript);
 
             while (rs.next()) {
                 int productID = rs.getInt("ProductID");
                 out.append("Order " + productID + " has been cancelled\n");
             }
+
+            rs.close();
+            cleanRs.close();
+            results.close();
+            cleanup.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error occurred when cleaning database");
@@ -1496,6 +1531,9 @@ class Assignment {
                 // Add newly constructed row to table
                 table.add(newRow);
             }
+
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error in application");
@@ -1550,6 +1588,9 @@ class Assignment {
                 // Add quantity to data of most recent employee
                 employeeData.get(employeeData.size() - 1).add("" + quantity);
             }
+
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error in application");
@@ -1650,6 +1691,9 @@ class Assignment {
 
             // Output table results
             System.out.println(table.toString());
+
+            rs.close();
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Error when getting reward-ees");
