@@ -1481,7 +1481,7 @@ class Assignment {
             Statement cleanup = conn.createStatement();
 
             ResultSet rs =  results.executeQuery(outputQuery);
-            ResultSet cleanRs = cleanup.execute(cleanupScript);
+            cleanup.execute(cleanupScript);
 
             while (rs.next()) {
                 int productID = rs.getInt("ProductID");
@@ -1489,7 +1489,6 @@ class Assignment {
             }
 
             rs.close();
-            cleanRs.close();
             results.close();
             cleanup.close();
         } catch (SQLException e) {
